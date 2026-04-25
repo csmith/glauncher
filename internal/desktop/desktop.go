@@ -136,10 +136,14 @@ func (p *Provider) scanDirectory(dir string, seen map[string]bool) {
 		if !strings.HasSuffix(path, ".desktop") {
 			return nil
 		}
-		if seen[path] {
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
 			return nil
 		}
-		seen[path] = true
+		if seen[rel] {
+			return nil
+		}
+		seen[rel] = true
 
 		e := parseDesktopFile(path)
 		if e != nil {
