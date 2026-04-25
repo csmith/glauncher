@@ -391,7 +391,7 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 	gtx.Constraints.Min.Y = height
 	gtx.Constraints.Max.Y = height
 
-	padding := layout.UniformInset(unit.Dp(4))
+	padding := layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4), Left: unit.Dp(12), Right: unit.Dp(12)}
 
 	macro := op.Record(gtx.Ops)
 	dims := padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -448,6 +448,7 @@ func (a *App) layoutResultText(gtx layout.Context, r search.Result, selected boo
 			label := material.Body1(a.theme, r.Name)
 			label.Color = nameColor
 			label.TextSize = unit.Sp(15)
+			label.MaxLines = 1
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -457,6 +458,7 @@ func (a *App) layoutResultText(gtx layout.Context, r search.Result, selected boo
 			label := material.Body2(a.theme, r.Description)
 			label.Color = descColor
 			label.TextSize = unit.Sp(12)
+			label.MaxLines = 1
 			return label.Layout(gtx)
 		}),
 	)
