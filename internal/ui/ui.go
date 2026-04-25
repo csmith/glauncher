@@ -31,7 +31,6 @@ type App struct {
 	selected  int
 	query     string
 	focused   bool
-	navTag    struct{}
 	theme     *material.Theme
 }
 
