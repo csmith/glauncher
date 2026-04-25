@@ -5,6 +5,7 @@ import (
 
 	"chameth.com/glauncher/internal/code"
 	"chameth.com/glauncher/internal/desktop"
+	"chameth.com/glauncher/internal/folders"
 	"chameth.com/glauncher/internal/ui"
 )
 
@@ -16,6 +17,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := ui.New(dp, cp)
+	fp := folders.NewProvider()
+
+	app := ui.New(dp, cp, fp)
 	app.Run()
 }
