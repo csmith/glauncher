@@ -27,6 +27,7 @@ type App struct {
 	providers []search.Provider
 	window    *app.Window
 	editor    widget.Editor
+	list      layout.List
 	results   []search.Result
 	selected  int
 	query     string
@@ -112,10 +113,12 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 		case key.NameUpArrow:
 			if a.selected > 0 {
 				a.selected--
+				a.scrollToSelected()
 			}
 		case key.NameDownArrow:
 			if a.selected < len(a.results)-1 {
 				a.selected++
+				a.scrollToSelected()
 			}
 		case key.NameReturn, key.NameEnter:
 			if a.selected < len(a.results) {
@@ -134,6 +137,23 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 		case key.NameRightArrow:
 			a.moveWordRight()
 		}
+	}
+}
+
+func (a *App) scrollToSelected() {
+	if len(a.results) == 0 {
+		return
+	}
+	pos := &a.list.Position
+	if pos.Count == 0 {
+		return
+	}
+	if a.selected < pos.First {
+		pos.First = a.selected
+		pos.Offset = 0
+	} else if pos.Count > 1 && a.selected >= pos.First+pos.Count-1 {
+		pos.First = a.selected - pos.Count + 2
+		pos.Offset = 0
 	}
 }
 
@@ -271,12 +291,10 @@ func (a *App) layoutResults(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{}
 	}
 
-	var dims layout.Dimensions
-	list := &layout.List{Axis: layout.Vertical}
-	dims = list.Layout(gtx, len(a.results), func(gtx layout.Context, index int) layout.Dimensions {
+	a.list.Axis = layout.Vertical
+	return a.list.Layout(gtx, len(a.results), func(gtx layout.Context, index int) layout.Dimensions {
 		return a.layoutResult(gtx, index)
 	})
-	return dims
 }
 
 func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
