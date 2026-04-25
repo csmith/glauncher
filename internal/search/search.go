@@ -12,3 +12,7 @@ type Result struct {
 type Provider interface {
 	Search(query string) []Result
 }
+
+type AsyncInitializer interface {
+	Ready() <-chan struct{}
+}

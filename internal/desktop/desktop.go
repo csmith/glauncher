@@ -20,6 +20,7 @@ type Provider struct {
 	mu        sync.RWMutex
 	entries   []entry
 	iconCache map[string]image.Image
+	ready     chan struct{}
 }
 
 type entry struct {
@@ -35,9 +36,17 @@ type entry struct {
 func NewProvider() *Provider {
 	p := &Provider{
 		iconCache: make(map[string]image.Image),
+		ready:     make(chan struct{}),
 	}
-	p.load()
+	go func() {
+		p.load()
+		close(p.ready)
+	}()
 	return p
+}
+
+func (p *Provider) Ready() <-chan struct{} {
+	return p.ready
 }
 
 func (p *Provider) Search(query string) []search.Result {
@@ -98,11 +107,41 @@ func (p *Provider) Search(query string) []search.Result {
 func (p *Provider) load() {
 	dirs := xdgDataDirs()
 	seen := make(map[string]bool)
+	var entries []entry
 
 	for _, dir := range dirs {
 		appDir := filepath.Join(dir, "applications")
-		p.scanDirectory(appDir, seen)
+		scanDirectory(appDir, seen, &entries)
 	}
+
+	p.mu.Lock()
+	p.entries = entries
+	p.mu.Unlock()
+}
+
+func scanDirectory(dir string, seen map[string]bool, entries *[]entry) {
+	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".desktop") {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return nil
+		}
+		if seen[rel] {
+			return nil
+		}
+		seen[rel] = true
+
+		e := parseDesktopFile(path)
+		if e != nil {
+			*entries = append(*entries, *e)
+		}
+		return nil
+	})
 }
 
 func xdgDataDirs() []string {
@@ -124,31 +163,6 @@ func xdgDataDirs() []string {
 	}
 
 	return dirs
-}
-
-func (p *Provider) scanDirectory(dir string, seen map[string]bool) {
-	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return nil
-		}
-		if !strings.HasSuffix(path, ".desktop") {
-			return nil
-		}
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return nil
-		}
-		if seen[rel] {
-			return nil
-		}
-		seen[rel] = true
-
-		e := parseDesktopFile(path)
-		if e != nil {
-			p.entries = append(p.entries, *e)
-		}
-		return nil
-	})
 }
 
 func parseDesktopFile(path string) *entry {

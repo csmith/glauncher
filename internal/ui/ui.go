@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"unicode"
 
 	"gioui.org/app"
@@ -45,16 +46,17 @@ type themeConfig struct {
 }
 
 type App struct {
-	providers []search.Provider
-	window    *app.Window
-	editor    widget.Editor
-	list      layout.List
-	results   []search.Result
-	selected  int
-	query     string
-	focused   bool
-	theme     *material.Theme
-	colors    themeConfig
+	providers    []search.Provider
+	window       *app.Window
+	editor       widget.Editor
+	list         layout.List
+	results      []search.Result
+	selected     int
+	query        string
+	focused      bool
+	theme        *material.Theme
+	colors       themeConfig
+	needsRefresh atomic.Bool
 }
 
 func New(providers ...search.Provider) *App {
@@ -76,6 +78,17 @@ func (a *App) Run() {
 			app.Decorated(false),
 			app.Title("glauncher"),
 		)
+
+		for _, p := range a.providers {
+			if ai, ok := p.(search.AsyncInitializer); ok {
+				go func() {
+					<-ai.Ready()
+					a.needsRefresh.Store(true)
+					a.window.Invalidate()
+				}()
+			}
+		}
+
 		if err := a.loop(); err != nil {
 			log.Fatal(err)
 		}
@@ -240,9 +253,10 @@ func (a *App) handleEditorEvents(gtx layout.Context) {
 
 func (a *App) updateSearch() {
 	q := a.editor.Text()
-	if q == a.query {
+	if q == a.query && (!a.needsRefresh.Load() || q == "") {
 		return
 	}
+	a.needsRefresh.Store(false)
 	a.query = q
 	a.results = nil
 	a.selected = 0

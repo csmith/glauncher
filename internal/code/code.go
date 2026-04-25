@@ -21,6 +21,7 @@ type Provider struct {
 	projects []project
 	dir      string
 	command  string
+	ready    chan struct{}
 }
 
 type project struct {
@@ -44,9 +45,17 @@ func NewProvider() (*Provider, error) {
 	p := &Provider{
 		dir:     cfg.Dir,
 		command: cfg.Command,
+		ready:   make(chan struct{}),
 	}
-	p.scan()
+	go func() {
+		p.scan()
+		close(p.ready)
+	}()
 	return p, nil
+}
+
+func (p *Provider) Ready() <-chan struct{} {
+	return p.ready
 }
 
 func (p *Provider) Search(query string) []search.Result {
