@@ -1,10 +1,13 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"gioui.org/app"
@@ -18,6 +21,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/csmith/config"
 	xdraw "golang.org/x/image/draw"
 
 	"chameth.com/glauncher/internal/search"
@@ -30,6 +34,14 @@ const dividerHeightDp = 1
 const visibleResults = 8
 const windowHeightDp = inputHeightDp + dividerHeightDp + resultHeightDp*visibleResults
 
+type themeColors struct {
+	background color.NRGBA
+	divider    color.NRGBA
+	primary    color.NRGBA
+	secondary  color.NRGBA
+	selection  color.NRGBA
+}
+
 type App struct {
 	providers []search.Provider
 	window    *app.Window
@@ -40,12 +52,15 @@ type App struct {
 	query     string
 	focused   bool
 	theme     *material.Theme
+	colors    themeColors
 }
 
 func New(providers ...search.Provider) *App {
+	colors := loadThemeColors()
 	a := &App{
 		providers: providers,
-		theme:     newTheme(),
+		theme:     newTheme(colors),
+		colors:    colors,
 	}
 	a.editor.SingleLine = true
 	return a
@@ -307,7 +322,7 @@ func (a *App) moveWordRight() {
 }
 
 func (a *App) layout(gtx layout.Context) layout.Dimensions {
-	paint.Fill(gtx.Ops, a.theme.Bg)
+	paint.Fill(gtx.Ops, a.colors.background)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -330,7 +345,7 @@ func (a *App) layoutInput(gtx layout.Context) layout.Dimensions {
 	return padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		ed := material.Editor(a.theme, &a.editor, "Search applications...")
 		ed.TextSize = unit.Sp(18)
-		ed.Color = a.theme.Fg
+		ed.Color = a.colors.primary
 		ed.HintColor = color.NRGBA{R: 140, G: 140, B: 160, A: 200}
 		ed.SelectionColor = color.NRGBA{R: 100, G: 140, B: 220, A: 100}
 		return ed.Layout(gtx)
@@ -341,7 +356,7 @@ func (a *App) layoutDivider(gtx layout.Context) layout.Dimensions {
 	height := gtx.Dp(unit.Dp(1))
 	w := gtx.Constraints.Max.X
 	r := clip.Rect{Max: image.Pt(w, height)}
-	paint.FillShape(gtx.Ops, color.NRGBA{R: 60, G: 60, B: 80, A: 255}, r.Op())
+	paint.FillShape(gtx.Ops, a.colors.divider, r.Op())
 	return layout.Dimensions{Size: image.Pt(w, height)}
 }
 
@@ -384,7 +399,7 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 
 	if selected {
 		paint.FillShape(gtx.Ops,
-			color.NRGBA{R: 100, G: 150, B: 230, A: 200},
+			a.colors.selection,
 			clip.Rect{Max: dims.Size}.Op(),
 		)
 	}
@@ -409,8 +424,8 @@ func (a *App) layoutIcon(gtx layout.Context, img image.Image) layout.Dimensions 
 }
 
 func (a *App) layoutResultText(gtx layout.Context, r search.Result, selected bool) layout.Dimensions {
-	nameColor := a.theme.Fg
-	descColor := color.NRGBA{R: 160, G: 160, B: 180, A: 255}
+	nameColor := a.colors.primary
+	descColor := a.colors.secondary
 	if selected {
 		nameColor = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 		descColor = color.NRGBA{R: 200, G: 200, B: 220, A: 255}
@@ -457,11 +472,78 @@ func placeholderIcon() image.Image {
 	return img
 }
 
-func newTheme() *material.Theme {
+func newTheme(colors themeColors) *material.Theme {
 	th := material.NewTheme()
-	th.Bg = color.NRGBA{R: 30, G: 30, B: 46, A: 240}
-	th.Fg = color.NRGBA{R: 205, G: 214, B: 244, A: 255}
+	th.Bg = colors.background
+	th.Fg = colors.primary
 	th.ContrastBg = color.NRGBA{R: 137, G: 180, B: 250, A: 255}
 	th.ContrastFg = color.NRGBA{R: 30, G: 30, B: 46, A: 255}
 	return th
+}
+
+func loadThemeColors() themeColors {
+	type cfg struct {
+		Background string `yaml:"background"`
+		Divider    string `yaml:"divider"`
+		Primary    string `yaml:"primary"`
+		Secondary  string `yaml:"secondary"`
+		Selection  string `yaml:"selection"`
+	}
+
+	c := cfg{
+		Background: "#1e1e2ef0",
+		Divider:    "#3c3c50",
+		Primary:    "#cdd6f4",
+		Secondary:  "#a0a0b4",
+		Selection:  "#6496e6c8",
+	}
+
+	_, _ = config.Load(&c, config.DirectoryName("glauncher"), config.FileName("theme.yml"))
+
+	return themeColors{
+		background: mustParseColor(c.Background),
+		divider:    mustParseColor(c.Divider),
+		primary:    mustParseColor(c.Primary),
+		secondary:  mustParseColor(c.Secondary),
+		selection:  mustParseColor(c.Selection),
+	}
+}
+
+func mustParseColor(s string) color.NRGBA {
+	c, err := parseHexColor(s)
+	if err != nil {
+		log.Fatalf("invalid colour %q: %v", s, err)
+	}
+	return c
+}
+
+func parseHexColor(s string) (color.NRGBA, error) {
+	s = strings.TrimPrefix(s, "#")
+
+	var r, g, b, a uint8
+	a = 255
+
+	switch len(s) {
+	case 6:
+		v, err := strconv.ParseUint(s, 16, 24)
+		if err != nil {
+			return color.NRGBA{}, fmt.Errorf("invalid hex colour: %w", err)
+		}
+		r = uint8(v >> 16)
+		g = uint8(v >> 8)
+		b = uint8(v)
+	case 8:
+		v, err := strconv.ParseUint(s, 16, 32)
+		if err != nil {
+			return color.NRGBA{}, fmt.Errorf("invalid hex colour: %w", err)
+		}
+		r = uint8(v >> 24)
+		g = uint8(v >> 16)
+		b = uint8(v >> 8)
+		a = uint8(v)
+	default:
+		return color.NRGBA{}, fmt.Errorf("colour must be #RRGGBB or #RRGGBBAA, got %d hex digits", len(s))
+	}
+
+	return color.NRGBA{R: r, G: g, B: b, A: a}, nil
 }
