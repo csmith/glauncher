@@ -21,6 +21,7 @@ import (
 	xdraw "golang.org/x/image/draw"
 
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/x11"
 )
 
 const resultHeightDp = 48
@@ -77,6 +78,10 @@ func (a *App) loop() error {
 			gtx := app.NewContext(&ops, e)
 			a.frame(gtx)
 			e.Frame(gtx.Ops)
+		case app.X11ViewEvent:
+			if e.Valid() {
+				x11.SetNoDecorations(e.Display, e.Window)
+			}
 		}
 	}
 }
