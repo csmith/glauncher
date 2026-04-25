@@ -53,7 +53,6 @@ type App struct {
 	results      []search.Result
 	selected     int
 	query        string
-	focused      bool
 	theme        *material.Theme
 	colors       themeConfig
 	needsRefresh atomic.Bool
@@ -99,11 +98,19 @@ func (a *App) Run() {
 
 func (a *App) loop() error {
 	var ops op.Ops
+	focused := false
 
 	for {
 		switch e := a.window.Event().(type) {
 		case app.DestroyEvent:
 			return e.Err
+		case app.ConfigEvent:
+			if focused && !e.Config.Focused {
+				a.window.Perform(system.ActionClose)
+			}
+			if e.Config.Focused {
+				focused = true
+			}
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
 			a.frame(gtx)
@@ -117,10 +124,7 @@ func (a *App) loop() error {
 }
 
 func (a *App) frame(gtx layout.Context) {
-	if !a.focused {
-		gtx.Execute(key.FocusCmd{Tag: &a.editor})
-		a.focused = true
-	}
+	gtx.Execute(key.FocusCmd{Tag: &a.editor})
 
 	a.handleNavKeys(gtx)
 	a.handleEditorEvents(gtx)
