@@ -23,6 +23,12 @@ import (
 	"chameth.com/glauncher/internal/search"
 )
 
+const resultHeightDp = 48
+const inputHeightDp = 52
+const dividerHeightDp = 1
+const visibleResults = 8
+const windowHeightDp = inputHeightDp + dividerHeightDp + resultHeightDp*visibleResults
+
 type App struct {
 	providers []search.Provider
 	window    *app.Window
@@ -48,7 +54,7 @@ func (a *App) Run() {
 	go func() {
 		a.window = &app.Window{}
 		a.window.Option(
-			app.Size(unit.Dp(600), unit.Dp(420)),
+			app.Size(unit.Dp(600), unit.Dp(windowHeightDp)),
 			app.Decorated(false),
 			app.Title("glauncher"),
 		)
@@ -92,6 +98,8 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 		ev, ok := gtx.Event(
 			key.Filter{Focus: &a.editor, Name: key.NameUpArrow},
 			key.Filter{Focus: &a.editor, Name: key.NameDownArrow},
+			key.Filter{Focus: &a.editor, Name: key.NamePageUp},
+			key.Filter{Focus: &a.editor, Name: key.NamePageDown},
 			key.Filter{Focus: &a.editor, Name: key.NameReturn},
 			key.Filter{Focus: &a.editor, Name: key.NameEnter},
 			key.Filter{Focus: &a.editor, Name: key.NameEscape},
@@ -120,6 +128,10 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 				a.selected++
 				a.scrollToSelected()
 			}
+		case key.NamePageUp:
+			a.pageUp()
+		case key.NamePageDown:
+			a.pageDown()
 		case key.NameReturn, key.NameEnter:
 			if a.selected < len(a.results) {
 				r := a.results[a.selected]
@@ -151,10 +163,48 @@ func (a *App) scrollToSelected() {
 	if a.selected < pos.First {
 		pos.First = a.selected
 		pos.Offset = 0
-	} else if pos.Count > 1 && a.selected >= pos.First+pos.Count-1 {
-		pos.First = a.selected - pos.Count + 2
+	} else if pos.Count > 1 && a.selected >= pos.First+pos.Count {
+		pos.First = a.selected - pos.Count + 1
 		pos.Offset = 0
 	}
+}
+
+func (a *App) pageUp() {
+	pos := &a.list.Position
+	if pos.Count <= 1 || len(a.results) == 0 {
+		return
+	}
+	firstVisible := pos.First
+	if a.selected > firstVisible {
+		a.selected = firstVisible
+		a.scrollToSelected()
+		return
+	}
+	target := max(firstVisible-pos.Count+1, 0)
+	a.selected = target
+	pos.First = a.selected
+	pos.Offset = 0
+}
+
+func (a *App) pageDown() {
+	pos := &a.list.Position
+	if pos.Count <= 1 || len(a.results) == 0 {
+		return
+	}
+	last := len(a.results) - 1
+	lastFullyVisible := min(pos.First+pos.Count-1, last)
+	if a.selected < lastFullyVisible {
+		a.selected = lastFullyVisible
+		a.scrollToSelected()
+		return
+	}
+	target := min(lastFullyVisible+pos.Count-1, last)
+	if target <= a.selected {
+		target = last
+	}
+	a.selected = target
+	pos.First = max(a.selected-pos.Count+1, 0)
+	pos.Offset = 0
 }
 
 func (a *App) handleEditorEvents(gtx layout.Context) {
@@ -267,7 +317,10 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (a *App) layoutInput(gtx layout.Context) layout.Dimensions {
-	padding := layout.UniformInset(unit.Dp(16))
+	h := gtx.Dp(unit.Dp(inputHeightDp))
+	gtx.Constraints.Min.Y = h
+	gtx.Constraints.Max.Y = h
+	padding := layout.UniformInset(unit.Dp(12))
 	return padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		ed := material.Editor(a.theme, &a.editor, "Search applications...")
 		ed.TextSize = unit.Sp(18)
@@ -301,7 +354,11 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 	r := a.results[index]
 	selected := index == a.selected
 
-	padding := layout.UniformInset(unit.Dp(8))
+	height := gtx.Dp(unit.Dp(resultHeightDp))
+	gtx.Constraints.Min.Y = height
+	gtx.Constraints.Max.Y = height
+
+	padding := layout.UniformInset(unit.Dp(4))
 
 	macro := op.Record(gtx.Ops)
 	dims := padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -316,6 +373,8 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 		)
 	})
 	call := macro.Stop()
+
+	dims.Size.Y = height
 
 	if selected {
 		paint.FillShape(gtx.Ops,
