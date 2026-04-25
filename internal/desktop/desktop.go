@@ -1,0 +1,400 @@
+package desktop
+
+import (
+	"bufio"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"os"
+	execcmd "os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+
+	"chameth.com/glauncher/internal/search"
+)
+
+type Provider struct {
+	mu        sync.RWMutex
+	entries   []entry
+	iconCache map[string]image.Image
+}
+
+type entry struct {
+	name        string
+	comment     string
+	iconName    string
+	exec        string
+	terminal    bool
+	nameLower   string
+	commentLower string
+}
+
+func NewProvider() *Provider {
+	p := &Provider{
+		iconCache: make(map[string]image.Image),
+	}
+	p.load()
+	return p
+}
+
+func (p *Provider) Search(query string) []search.Result {
+	if query == "" {
+		return nil
+	}
+
+	q := strings.ToLower(query)
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	type scored struct {
+		entry  entry
+		score  int
+	}
+
+	var matches []scored
+	for _, e := range p.entries {
+		s := 0
+		if strings.HasPrefix(e.nameLower, q) {
+			s = 100
+		} else if strings.Contains(e.nameLower, q) {
+			s = 50
+		} else if strings.Contains(e.commentLower, q) {
+			s = 25
+		}
+		if s > 0 {
+			matches = append(matches, scored{e, s})
+		}
+	}
+
+	sort.Slice(matches, func(i, j int) bool {
+		if matches[i].score != matches[j].score {
+			return matches[i].score > matches[j].score
+		}
+		return matches[i].entry.nameLower < matches[j].entry.nameLower
+	})
+
+	limit := 8
+	if len(matches) < limit {
+		limit = len(matches)
+	}
+
+	results := make([]search.Result, limit)
+	for i := range results {
+		e := matches[i].entry
+		results[i] = search.Result{
+			Name:        e.name,
+			Description: e.comment,
+			Icon:        p.lookupIcon(e.iconName),
+			Exec: func(exec string) func() error {
+				return func() error {
+					return launch(exec)
+				}
+			}(e.exec),
+		}
+	}
+
+	return results
+}
+
+func (p *Provider) load() {
+	dirs := xdgDataDirs()
+	seen := make(map[string]bool)
+
+	for _, dir := range dirs {
+		appDir := filepath.Join(dir, "applications")
+		p.scanDirectory(appDir, seen)
+	}
+}
+
+func xdgDataDirs() []string {
+	var dirs []string
+
+	if home, err := os.UserHomeDir(); err == nil {
+		dirs = append(dirs, filepath.Join(home, ".local", "share"))
+	}
+
+	if xdg := os.Getenv("XDG_DATA_DIRS"); xdg != "" {
+		for _, d := range strings.Split(xdg, ":") {
+			d = strings.TrimSpace(d)
+			if d != "" {
+				dirs = append(dirs, d)
+			}
+		}
+	} else {
+		dirs = append(dirs, "/usr/local/share", "/usr/share")
+	}
+
+	return dirs
+}
+
+func (p *Provider) scanDirectory(dir string, seen map[string]bool) {
+	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".desktop") {
+			return nil
+		}
+		if seen[path] {
+			return nil
+		}
+		seen[path] = true
+
+		e := parseDesktopFile(path)
+		if e != nil {
+			p.entries = append(p.entries, *e)
+		}
+		return nil
+	})
+}
+
+func parseDesktopFile(path string) *entry {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	e := &entry{}
+	inDesktopEntry := false
+	isApplication := false
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if line == "[Desktop Entry]" {
+			inDesktopEntry = true
+			continue
+		}
+		if strings.HasPrefix(line, "[") {
+			inDesktopEntry = false
+			continue
+		}
+		if !inDesktopEntry {
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+
+		switch key {
+		case "Type":
+			isApplication = value == "Application"
+		case "Name":
+			if e.name == "" {
+				e.name = value
+			}
+		case "Comment":
+			if e.comment == "" {
+				e.comment = value
+			}
+		case "Icon":
+			if e.iconName == "" {
+				e.iconName = value
+			}
+		case "Exec":
+			if e.exec == "" {
+				e.exec = value
+			}
+		case "Terminal":
+			e.terminal = value == "true"
+		case "NoDisplay":
+			if value == "true" {
+				return nil
+			}
+		case "Hidden":
+			if value == "true" {
+				return nil
+			}
+		}
+	}
+
+	if !isApplication || e.name == "" || e.exec == "" {
+		return nil
+	}
+
+	e.nameLower = strings.ToLower(e.name)
+	e.commentLower = strings.ToLower(e.comment)
+	return e
+}
+
+func (p *Provider) lookupIcon(name string) image.Image {
+	if name == "" {
+		return placeholderIcon()
+	}
+
+	if img, ok := p.iconCache[name]; ok {
+		return img
+	}
+
+	if img := p.findIconFile(name); img != nil {
+		p.iconCache[name] = img
+		return img
+	}
+
+	p.iconCache[name] = nil
+	return placeholderIcon()
+}
+
+func (p *Provider) findIconFile(name string) image.Image {
+	extensions := []string{".png", ".svg"}
+	sizeDirs := []string{"48x48", "64x64", "128x128", "scalable", ""}
+
+	searchDirs := iconSearchDirs()
+
+	for _, dir := range searchDirs {
+		for _, sizeDir := range sizeDirs {
+			var searchPath string
+			if sizeDir != "" {
+				searchPath = filepath.Join(dir, sizeDir, "apps")
+			} else {
+				searchPath = dir
+			}
+
+			for _, ext := range extensions {
+				candidate := filepath.Join(searchPath, name+ext)
+				if f, err := os.Open(candidate); err == nil {
+					defer f.Close()
+					if ext == ".png" {
+						if img, err := png.Decode(f); err == nil {
+							return resizeIcon(img, 48)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if filepath.IsAbs(name) {
+		if f, err := os.Open(name); err == nil {
+			defer f.Close()
+			if strings.HasSuffix(strings.ToLower(name), ".png") {
+				if img, err := png.Decode(f); err == nil {
+					return resizeIcon(img, 48)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func iconSearchDirs() []string {
+	var dirs []string
+
+	if home, err := os.UserHomeDir(); err == nil {
+		dirs = append(dirs,
+			filepath.Join(home, ".local", "share", "icons", "hicolor"),
+			filepath.Join(home, ".icons"),
+		)
+	}
+
+	dirs = append(dirs,
+		"/usr/share/icons/hicolor",
+		"/usr/share/icons",
+		"/usr/share/pixmaps",
+		"/usr/local/share/icons",
+		"/usr/local/share/pixmaps",
+	)
+
+	return dirs
+}
+
+func resizeIcon(img image.Image, size int) image.Image {
+	b := img.Bounds()
+	if b.Dx() == size && b.Dy() == size {
+		return img
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, size, size))
+	scaleX := float64(b.Dx()) / float64(size)
+	scaleY := float64(b.Dy()) / float64(size)
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			sx := int(float64(x) * scaleX)
+			sy := int(float64(y) * scaleY)
+			dst.Set(x, y, img.At(b.Min.X+sx, b.Min.Y+sy))
+		}
+	}
+	return dst
+}
+
+func placeholderIcon() image.Image {
+	const s = 48
+	img := image.NewRGBA(image.Rect(0, 0, s, s))
+	bg := color.NRGBA{R: 80, G: 80, B: 100, A: 255}
+	for y := 0; y < s; y++ {
+		for x := 0; x < s; x++ {
+			img.Set(x, y, bg)
+		}
+	}
+	return img
+}
+
+func launch(execLine string) error {
+	cmd := cleanExec(execLine)
+	parts := splitCommand(cmd)
+	if len(parts) == 0 {
+		return fmt.Errorf("empty command")
+	}
+
+	c := execcmd.Command(parts[0], parts[1:]...)
+	c.Stdin = nil
+	c.Stdout = nil
+	c.Stderr = nil
+	c.SysProcAttr = &syscallSetProcessGroupID
+	return c.Start()
+}
+
+func cleanExec(s string) string {
+	var b strings.Builder
+	i := 0
+	for i < len(s) {
+		if s[i] == '%' && i+1 < len(s) {
+			switch s[i+1] {
+			case '%':
+				b.WriteByte('%')
+			}
+			i += 2
+			continue
+		}
+		b.WriteByte(s[i])
+		i++
+	}
+	return strings.TrimSpace(b.String())
+}
+
+func splitCommand(s string) []string {
+	var parts []string
+	var current strings.Builder
+	inQuotes := false
+
+	for _, c := range s {
+		switch {
+		case c == '"':
+			inQuotes = !inQuotes
+		case c == ' ' && !inQuotes:
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteRune(c)
+		}
+	}
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+	return parts
+}
