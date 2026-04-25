@@ -229,6 +229,7 @@ func (a *App) updateSearch() {
 	a.query = q
 	a.results = nil
 	a.selected = 0
+	a.list.Position = layout.Position{}
 
 	if q == "" {
 		return
