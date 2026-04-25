@@ -326,6 +326,16 @@ func (a *App) moveWordRight() {
 func (a *App) layout(gtx layout.Context) layout.Dimensions {
 	paint.Fill(gtx.Ops, a.colors.background)
 
+	size := gtx.Constraints.Max
+	radius := gtx.Dp(unit.Dp(4))
+	r := clip.UniformRRect(image.Rect(0, 0, size.X, size.Y), radius)
+	borderWidth := float32(2 * gtx.Dp(unit.Dp(1)))
+	stroke := clip.Stroke{
+		Path:  r.Path(gtx.Ops),
+		Width: borderWidth,
+	}.Op()
+	paint.FillShape(gtx.Ops, a.colors.divider, stroke)
+
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return a.layoutInput(gtx)
