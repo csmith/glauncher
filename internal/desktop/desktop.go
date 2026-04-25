@@ -77,9 +77,7 @@ func (p *Provider) Search(query string) []search.Result {
 		return matches[i].entry.nameLower < matches[j].entry.nameLower
 	})
 
-	limit := min(len(matches), 8)
-
-	results := make([]search.Result, limit)
+	results := make([]search.Result, len(matches))
 	for i := range results {
 		e := matches[i].entry
 		results[i] = search.Result{
