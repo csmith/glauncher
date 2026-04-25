@@ -1,0 +1,33 @@
+# AGENTS.md
+
+## Project
+
+Gio UI-based Linux application launcher. Reads `.desktop` files from XDG data directories, provides a search-driven GUI to find and launch apps.
+
+Module: `chameth.com/glauncher` | Go 1.26.2 | License: MIT
+
+## Makefile targets
+
+- `make build` — compile and produce `glauncher` binary (requires CGO + Wayland/X11 dev headers)
+- `make verify` — build, vet, fix, staticcheck, and fmt
+
+## Verification
+
+Always run `make verify` after making changes. There are no tests.
+
+CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go build` and `go test` on every PR.
+
+## Architecture
+
+- `main.go` — entrypoint; wires `desktop.Provider` into the UI
+- `internal/search/` — `search.Provider` interface and `search.Result` struct
+- `internal/desktop/` — implements `search.Provider`: parses `.desktop` files, loads icons, launches apps. Has platform-specific files (`sys_linux.go` / `sys_other.go`) for process group ID handling
+- `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons
+
+The `desktop` package is the primary logic; `ui` is presentation. Adding a new search source means implementing the `search.Provider` interface.
+
+## Key details
+
+- Gio UI (`gioui.org`) is the GUI toolkit — requires CGO and platform graphics libraries (Wayland/X11 headers) to build
+- No tests yet; when adding them, follow standard Go patterns (`_test.go` files in each package)
+- CI is on Forgejo (not GitHub), defined in `.forgejo/workflows/`

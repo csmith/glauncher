@@ -23,12 +23,12 @@ type Provider struct {
 }
 
 type entry struct {
-	name        string
-	comment     string
-	iconName    string
-	exec        string
-	terminal    bool
-	nameLower   string
+	name         string
+	comment      string
+	iconName     string
+	exec         string
+	terminal     bool
+	nameLower    string
 	commentLower string
 }
 
@@ -51,8 +51,8 @@ func (p *Provider) Search(query string) []search.Result {
 	defer p.mu.RUnlock()
 
 	type scored struct {
-		entry  entry
-		score  int
+		entry entry
+		score int
 	}
 
 	var matches []scored
@@ -77,10 +77,7 @@ func (p *Provider) Search(query string) []search.Result {
 		return matches[i].entry.nameLower < matches[j].entry.nameLower
 	})
 
-	limit := 8
-	if len(matches) < limit {
-		limit = len(matches)
-	}
+	limit := min(len(matches), 8)
 
 	results := make([]search.Result, limit)
 	for i := range results {
@@ -118,7 +115,7 @@ func xdgDataDirs() []string {
 	}
 
 	if xdg := os.Getenv("XDG_DATA_DIRS"); xdg != "" {
-		for _, d := range strings.Split(xdg, ":") {
+		for d := range strings.SplitSeq(xdg, ":") {
 			d = strings.TrimSpace(d)
 			if d != "" {
 				dirs = append(dirs, d)
@@ -320,8 +317,8 @@ func resizeIcon(img image.Image, size int) image.Image {
 	dst := image.NewRGBA(image.Rect(0, 0, size, size))
 	scaleX := float64(b.Dx()) / float64(size)
 	scaleY := float64(b.Dy()) / float64(size)
-	for y := 0; y < size; y++ {
-		for x := 0; x < size; x++ {
+	for y := range size {
+		for x := range size {
 			sx := int(float64(x) * scaleX)
 			sy := int(float64(y) * scaleY)
 			dst.Set(x, y, img.At(b.Min.X+sx, b.Min.Y+sy))
@@ -334,8 +331,8 @@ func placeholderIcon() image.Image {
 	const s = 48
 	img := image.NewRGBA(image.Rect(0, 0, s, s))
 	bg := color.NRGBA{R: 80, G: 80, B: 100, A: 255}
-	for y := 0; y < s; y++ {
-		for x := 0; x < s; x++ {
+	for y := range s {
+		for x := range s {
 			img.Set(x, y, bg)
 		}
 	}

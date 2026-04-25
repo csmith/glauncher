@@ -201,10 +201,7 @@ func (a *App) deleteWordBack() {
 
 func (a *App) moveWordLeft() {
 	selStart, selEnd := a.editor.Selection()
-	pos := selStart
-	if selStart > selEnd {
-		pos = selEnd
-	}
+	pos := min(selStart, selEnd)
 	text := a.editor.Text()
 	runes := []rune(text)
 
@@ -220,10 +217,7 @@ func (a *App) moveWordLeft() {
 
 func (a *App) moveWordRight() {
 	selStart, selEnd := a.editor.Selection()
-	pos := selEnd
-	if selStart > selEnd {
-		pos = selStart
-	}
+	pos := max(selStart, selEnd)
 	text := a.editor.Text()
 	runes := []rune(text)
 
@@ -373,8 +367,8 @@ func placeholderIcon() image.Image {
 	const s = 32
 	img := image.NewRGBA(image.Rect(0, 0, s, s))
 	bg := color.NRGBA{R: 80, G: 80, B: 100, A: 255}
-	for y := 0; y < s; y++ {
-		for x := 0; x < s; x++ {
+	for y := range s {
+		for x := range s {
 			img.Set(x, y, bg)
 		}
 	}
