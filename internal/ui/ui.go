@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"gioui.org/app"
+	"gioui.org/font"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -34,12 +35,13 @@ const dividerHeightDp = 1
 const visibleResults = 8
 const windowHeightDp = inputHeightDp + dividerHeightDp + resultHeightDp*visibleResults
 
-type themeColors struct {
+type themeConfig struct {
 	background color.NRGBA
 	divider    color.NRGBA
 	primary    color.NRGBA
 	secondary  color.NRGBA
 	selection  color.NRGBA
+	typeface   font.Typeface
 }
 
 type App struct {
@@ -52,7 +54,7 @@ type App struct {
 	query     string
 	focused   bool
 	theme     *material.Theme
-	colors    themeColors
+	colors    themeConfig
 }
 
 func New(providers ...search.Provider) *App {
@@ -472,22 +474,26 @@ func placeholderIcon() image.Image {
 	return img
 }
 
-func newTheme(colors themeColors) *material.Theme {
+func newTheme(colors themeConfig) *material.Theme {
 	th := material.NewTheme()
 	th.Bg = colors.background
 	th.Fg = colors.primary
 	th.ContrastBg = color.NRGBA{R: 137, G: 180, B: 250, A: 255}
 	th.ContrastFg = color.NRGBA{R: 30, G: 30, B: 46, A: 255}
+	if colors.typeface != "" {
+		th.Face = colors.typeface
+	}
 	return th
 }
 
-func loadThemeColors() themeColors {
+func loadThemeColors() themeConfig {
 	type cfg struct {
 		Background string `yaml:"background"`
 		Divider    string `yaml:"divider"`
 		Primary    string `yaml:"primary"`
 		Secondary  string `yaml:"secondary"`
 		Selection  string `yaml:"selection"`
+		Font       string `yaml:"font"`
 	}
 
 	c := cfg{
@@ -500,12 +506,13 @@ func loadThemeColors() themeColors {
 
 	_, _ = config.Load(&c, config.DirectoryName("glauncher"), config.FileName("theme.yml"))
 
-	return themeColors{
+	return themeConfig{
 		background: mustParseColor(c.Background),
 		divider:    mustParseColor(c.Divider),
 		primary:    mustParseColor(c.Primary),
 		secondary:  mustParseColor(c.Secondary),
 		selection:  mustParseColor(c.Selection),
+		typeface:   font.Typeface(c.Font),
 	}
 }
 
