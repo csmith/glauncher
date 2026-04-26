@@ -11,6 +11,7 @@ type Result struct {
 	Description string
 	Icon        image.Image
 	Exec        func() error
+	Query       string
 }
 
 type Provider interface {
@@ -27,15 +28,23 @@ type AsyncSearchProvider interface {
 }
 
 func SortResults(results []Result, query string) {
-	q := strings.ToLower(query)
 	sort.Slice(results, func(i, j int) bool {
-		si := score(strings.ToLower(results[i].Name), strings.ToLower(results[i].Description), q)
-		sj := score(strings.ToLower(results[j].Name), strings.ToLower(results[j].Description), q)
+		qi := results[i].Query
+		if qi == "" {
+			qi = query
+		}
+		qj := results[j].Query
+		if qj == "" {
+			qj = query
+		}
+
+		si := score(strings.ToLower(results[i].Name), strings.ToLower(results[i].Description), strings.ToLower(qi))
+		sj := score(strings.ToLower(results[j].Name), strings.ToLower(results[j].Description), strings.ToLower(qj))
 		if si != sj {
 			return si > sj
 		}
-		di := LevenshteinDistance(strings.ToLower(results[i].Name), q)
-		dj := LevenshteinDistance(strings.ToLower(results[j].Name), q)
+		di := LevenshteinDistance(strings.ToLower(results[i].Name), strings.ToLower(qi))
+		dj := LevenshteinDistance(strings.ToLower(results[j].Name), strings.ToLower(qj))
 		if di != dj {
 			return di < dj
 		}

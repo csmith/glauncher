@@ -67,6 +67,7 @@ func (p *Provider) Search(query string) []search.Result {
 			Name:        proj.name,
 			Description: proj.path,
 			Icon:        folderIcon(),
+			Query:       searchStr,
 			Exec: func(path string, cmd string) func() error {
 				return func() error {
 					return launch(cmd, path)

@@ -103,6 +103,7 @@ func (p *Provider) doSearch() {
 			Name:        pkg.Pkgname,
 			Description: fmt.Sprintf("[%s/%s] %s", pkg.Repo, pkg.Arch, pkg.Pkgdesc),
 			Icon:        packageIcon(),
+			Query:       searchTerm,
 			Exec: func(u string) func() error {
 				return func() error {
 					return openURL(u)
@@ -116,6 +117,7 @@ func (p *Provider) doSearch() {
 			Name:        pkg.Name,
 			Description: fmt.Sprintf("[AUR] %s", pkg.Description),
 			Icon:        aurIcon(),
+			Query:       searchTerm,
 			Exec: func(u string) func() error {
 				return func() error {
 					return openURL(u)
