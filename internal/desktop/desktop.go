@@ -13,6 +13,9 @@ import (
 	"sync"
 
 	"chameth.com/glauncher/internal/search"
+
+	"github.com/srwiley/oksvg"
+	"github.com/srwiley/rasterx"
 )
 
 type Provider struct {
@@ -253,11 +256,15 @@ func (p *Provider) findIconFile(name string) image.Image {
 			for _, ext := range extensions {
 				candidate := filepath.Join(searchPath, name+ext)
 				if f, err := os.Open(candidate); err == nil {
-					defer f.Close()
+					var img image.Image
 					if ext == ".png" {
-						if img, err := png.Decode(f); err == nil {
-							return resizeIcon(img, 48)
-						}
+						img, err = png.Decode(f)
+					} else if ext == ".svg" {
+						img, err = decodeSVG(f, 48)
+					}
+					f.Close()
+					if img != nil && err == nil {
+						return resizeIcon(img, 48)
 					}
 				}
 			}
@@ -266,11 +273,16 @@ func (p *Provider) findIconFile(name string) image.Image {
 
 	if filepath.IsAbs(name) {
 		if f, err := os.Open(name); err == nil {
-			defer f.Close()
-			if strings.HasSuffix(strings.ToLower(name), ".png") {
-				if img, err := png.Decode(f); err == nil {
-					return resizeIcon(img, 48)
-				}
+			var img image.Image
+			lower := strings.ToLower(name)
+			if strings.HasSuffix(lower, ".png") {
+				img, err = png.Decode(f)
+			} else if strings.HasSuffix(lower, ".svg") {
+				img, err = decodeSVG(f, 48)
+			}
+			f.Close()
+			if img != nil && err == nil {
+				return resizeIcon(img, 48)
 			}
 		}
 	}
@@ -297,6 +309,19 @@ func iconSearchDirs() []string {
 	)
 
 	return dirs
+}
+
+func decodeSVG(f *os.File, size int) (image.Image, error) {
+	icon, err := oksvg.ReadIconStream(f)
+	if err != nil {
+		return nil, err
+	}
+	icon.SetTarget(0, 0, float64(size), float64(size))
+	img := image.NewRGBA(image.Rect(0, 0, size, size))
+	scanner := rasterx.NewScannerGV(size, size, img, img.Bounds())
+	dasher := rasterx.NewDasher(size, size, scanner)
+	icon.Draw(dasher, 1)
+	return img, nil
 }
 
 func resizeIcon(img image.Image, size int) image.Image {
