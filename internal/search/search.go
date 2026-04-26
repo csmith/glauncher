@@ -12,6 +12,7 @@ type Result struct {
 	Icon        image.Image
 	Exec        func() error
 	Query       string
+	Priority    int
 }
 
 type Provider interface {
@@ -29,6 +30,12 @@ type AsyncSearchProvider interface {
 
 func SortResults(results []Result, query string) {
 	sort.Slice(results, func(i, j int) bool {
+		pi := results[i].Priority
+		pj := results[j].Priority
+		if pi != pj {
+			return pi > pj
+		}
+
 		qi := results[i].Query
 		if qi == "" {
 			qi = query

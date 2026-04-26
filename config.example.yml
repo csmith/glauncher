@@ -22,3 +22,17 @@ arch:
 
 calc:
   enabled: false
+
+search:
+  enabled: false
+  providers:
+    - name: kagi
+      url: "https://kagi.com/search?q=%s"
+      always_include: true
+    - name: google
+      url: "https://www.google.com/search?q=%s"
+      always_include: false
+    - name: letterboxd
+      aliases: ["lb"]
+      url: "https://letterboxd.com/search/%s/"
+      always_include: false

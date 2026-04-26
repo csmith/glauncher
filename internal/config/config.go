@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	Theme   ThemeConfig   `yaml:"theme"`
-	Desktop DesktopConfig `yaml:"desktop"`
-	Code    CodeConfig    `yaml:"code"`
-	Folders FoldersConfig `yaml:"folders"`
-	Arch    ArchConfig    `yaml:"arch"`
-	Calc    CalcConfig    `yaml:"calc"`
+	Theme     ThemeConfig     `yaml:"theme"`
+	Desktop   DesktopConfig   `yaml:"desktop"`
+	Code      CodeConfig      `yaml:"code"`
+	Folders   FoldersConfig   `yaml:"folders"`
+	Arch      ArchConfig      `yaml:"arch"`
+	Calc      CalcConfig      `yaml:"calc"`
+	SearchWeb SearchWebConfig `yaml:"search"`
 }
 
 type ThemeConfig struct {
@@ -45,6 +46,18 @@ type ArchConfig struct {
 
 type CalcConfig struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type SearchWebConfig struct {
+	Enabled   bool             `yaml:"enabled"`
+	Providers []SearchWebEntry `yaml:"providers"`
+}
+
+type SearchWebEntry struct {
+	Name          string   `yaml:"name"`
+	Aliases       []string `yaml:"aliases"`
+	URL           string   `yaml:"url"`
+	AlwaysInclude bool     `yaml:"always_include"`
 }
 
 func Load() (*Config, error) {

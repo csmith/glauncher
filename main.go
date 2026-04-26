@@ -10,6 +10,7 @@ import (
 	"chameth.com/glauncher/internal/desktop"
 	"chameth.com/glauncher/internal/folders"
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/searchweb"
 	"chameth.com/glauncher/internal/ui"
 )
 
@@ -43,6 +44,19 @@ func main() {
 
 	if cfg.Calc.Enabled {
 		providers = append(providers, calc.NewProvider())
+	}
+
+	if cfg.SearchWeb.Enabled {
+		var entries []searchweb.Entry
+		for _, p := range cfg.SearchWeb.Providers {
+			entries = append(entries, searchweb.Entry{
+				Name:          p.Name,
+				Aliases:       p.Aliases,
+				URL:           p.URL,
+				AlwaysInclude: p.AlwaysInclude,
+			})
+		}
+		providers = append(providers, searchweb.NewProvider(entries))
 	}
 
 	app := ui.New(cfg.Theme, providers...)
