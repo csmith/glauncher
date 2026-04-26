@@ -32,27 +32,23 @@ func (p *Provider) Search(query string) []search.Result {
 	var results []search.Result
 
 	if prefix == "" {
-		cleanDir := strings.TrimRight(dir, "/")
-		if cleanDir == "" && dir == "/" {
-			cleanDir = "/"
+		name := strings.TrimRight(dir, "/")
+		if name != "" {
+			name = name[strings.LastIndex(name, "/")+1:]
+		} else {
+			name = "/"
 		}
-		if cleanDir != "" {
-			name := cleanDir[strings.LastIndex(cleanDir, "/")+1:]
-			if name == "" {
-				name = "/"
-			}
-			results = append(results, search.Result{
-				Name:        name,
-				Description: dir,
-				Icon:        folderIcon(),
-				Query:       expanded,
-				Exec: func(path string) func() error {
-					return func() error {
-						return launch(path)
-					}
-				}(cleanDir),
-			})
-		}
+		results = append(results, search.Result{
+			Name:        name,
+			Description: dir,
+			Icon:        folderIcon(),
+			Query:       expanded,
+			Exec: func(path string) func() error {
+				return func() error {
+					return launch(path)
+				}
+			}(strings.TrimRight(dir, "/")),
+		})
 	}
 
 	prefixLower := strings.ToLower(prefix)
