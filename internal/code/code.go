@@ -7,7 +7,6 @@ import (
 	"os"
 	execcmd "os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 
@@ -58,36 +57,13 @@ func (p *Provider) Search(query string) []search.Result {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	type scored struct {
-		proj  project
-		score int
-	}
-
-	var matches []scored
+	var results []search.Result
 	for _, proj := range p.projects {
 		nameLower := strings.ToLower(proj.name)
-		var s int
-		if strings.HasPrefix(nameLower, searchLower) {
-			s = 100
-		} else if strings.Contains(nameLower, searchLower) {
-			s = 50
+		if !strings.HasPrefix(nameLower, searchLower) && !strings.Contains(nameLower, searchLower) {
+			continue
 		}
-		if s > 0 {
-			matches = append(matches, scored{proj, s})
-		}
-	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		if matches[i].score != matches[j].score {
-			return matches[i].score > matches[j].score
-		}
-		return matches[i].proj.name < matches[j].proj.name
-	})
-
-	results := make([]search.Result, len(matches))
-	for i := range results {
-		proj := matches[i].proj
-		results[i] = search.Result{
+		results = append(results, search.Result{
 			Name:        proj.name,
 			Description: proj.path,
 			Icon:        folderIcon(),
@@ -96,7 +72,7 @@ func (p *Provider) Search(query string) []search.Result {
 					return launch(cmd, path)
 				}
 			}(proj.path, p.command),
-		}
+		})
 	}
 
 	return results

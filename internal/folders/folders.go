@@ -5,13 +5,10 @@ import (
 	"image/color"
 	"os"
 	execcmd "os/exec"
-	"sort"
 	"strings"
 
 	"chameth.com/glauncher/internal/search"
 )
-
-const maxResults = 20
 
 type Provider struct{}
 
@@ -46,11 +43,6 @@ func (p *Provider) Search(query string) []search.Result {
 			continue
 		}
 		matches = append(matches, name)
-	}
-
-	sort.Strings(matches)
-	if len(matches) > maxResults {
-		matches = matches[:maxResults]
 	}
 
 	results := make([]search.Result, len(matches))

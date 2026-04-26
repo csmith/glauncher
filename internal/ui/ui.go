@@ -278,6 +278,7 @@ func (a *App) updateSearch() {
 	for _, p := range a.providers {
 		a.results = append(a.results, p.Search(q)...)
 	}
+	search.SortResults(a.results, q)
 }
 
 func (a *App) deleteWordBack() {

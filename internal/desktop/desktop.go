@@ -9,7 +9,6 @@ import (
 	"os"
 	execcmd "os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 
@@ -59,37 +58,12 @@ func (p *Provider) Search(query string) []search.Result {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	type scored struct {
-		entry entry
-		score int
-	}
-
-	var matches []scored
+	var results []search.Result
 	for _, e := range p.entries {
-		s := 0
-		if strings.HasPrefix(e.nameLower, q) {
-			s = 100
-		} else if strings.Contains(e.nameLower, q) {
-			s = 50
-		} else if strings.Contains(e.commentLower, q) {
-			s = 25
+		if !strings.HasPrefix(e.nameLower, q) && !strings.Contains(e.nameLower, q) && !strings.Contains(e.commentLower, q) {
+			continue
 		}
-		if s > 0 {
-			matches = append(matches, scored{e, s})
-		}
-	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		if matches[i].score != matches[j].score {
-			return matches[i].score > matches[j].score
-		}
-		return matches[i].entry.nameLower < matches[j].entry.nameLower
-	})
-
-	results := make([]search.Result, len(matches))
-	for i := range results {
-		e := matches[i].entry
-		results[i] = search.Result{
+		results = append(results, search.Result{
 			Name:        e.name,
 			Description: e.comment,
 			Icon:        p.lookupIcon(e.iconName),
@@ -98,7 +72,7 @@ func (p *Provider) Search(query string) []search.Result {
 					return launch(exec)
 				}
 			}(e.exec),
-		}
+		})
 	}
 
 	return results

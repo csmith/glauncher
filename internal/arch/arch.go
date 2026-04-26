@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"net/http"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"chameth.com/glauncher/internal/search"
 )
 
-const maxResults = 20
 const debounceDelay = time.Second
 
 type Provider struct {
@@ -100,10 +98,6 @@ func (p *Provider) doSearch() {
 
 	var results []search.Result
 	for _, pkg := range official {
-		if len(results) >= maxResults {
-			break
-		}
-		pkg := pkg
 		url := fmt.Sprintf("https://archlinux.org/packages/%s/%s/%s/", pkg.Repo, pkg.Arch, pkg.Pkgname)
 		results = append(results, search.Result{
 			Name:        pkg.Pkgname,
@@ -117,10 +111,6 @@ func (p *Provider) doSearch() {
 		})
 	}
 	for _, pkg := range aur {
-		if len(results) >= maxResults {
-			break
-		}
-		pkg := pkg
 		url := fmt.Sprintf("https://aur.archlinux.org/packages/%s", pkg.Name)
 		results = append(results, search.Result{
 			Name:        pkg.Name,
@@ -133,10 +123,6 @@ func (p *Provider) doSearch() {
 			}(url),
 		})
 	}
-
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Name < results[j].Name
-	})
 
 	p.mu.Lock()
 	p.results = results
