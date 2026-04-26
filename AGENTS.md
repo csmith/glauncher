@@ -2,7 +2,7 @@
 
 ## Project
 
-Gio UI-based Linux application launcher. Reads `.desktop` files from XDG data directories, provides a search-driven GUI to find and launch apps.
+Gio UI-based Linux application launcher. Reads `.desktop` files from XDG data directories, provides a search-driven GUI to find and launch apps, with additional providers for code projects and folder navigation.
 
 Module: `chameth.com/glauncher` | Go 1.26.2 | License: MIT
 
@@ -19,15 +19,23 @@ CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go 
 
 ## Architecture
 
-- `main.go` — entrypoint; wires `desktop.Provider` into the UI
+- `main.go` — entrypoint; loads unified config, conditionally creates enabled providers
+- `internal/config/` — unified config loading from `~/.config/glauncher/config.yml` (`config.example.yml` in repo root shows all options)
 - `internal/search/` — `search.Provider` interface and `search.Result` struct
 - `internal/desktop/` — implements `search.Provider`: parses `.desktop` files, loads icons, launches apps. Has platform-specific files (`sys_linux.go` / `sys_other.go`) for process group ID handling
+- `internal/code/` — implements `search.Provider`: scans a directory for version-controlled projects, opens them in an editor
+- `internal/folders/` — implements `search.Provider`: opens directories by path
 - `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons
 
-The `desktop` package is the primary logic; `ui` is presentation. Adding a new search source means implementing the `search.Provider` interface.
+## Configuration
+
+Single `config.yml` loaded from `~/.config/glauncher/config.yml`. Each provider has its own top-level section with an `enabled` bool (defaults to `false`). The `theme` section controls colours and font. See `config.example.yml` for all options.
+
+Adding a new search source means implementing `search.Provider`, adding a config section with an `enabled` field to `internal/config`, and wiring it in `main.go`.
 
 ## Key details
 
 - Gio UI (`gioui.org`) is the GUI toolkit — requires CGO and platform graphics libraries (Wayland/X11 headers) to build
+- Config uses `github.com/csmith/config` for YAML loading from XDG config dir
 - No tests yet; when adding them, follow standard Go patterns (`_test.go` files in each package)
 - CI is on Forgejo (not GitHub), defined in `.forgejo/workflows/`

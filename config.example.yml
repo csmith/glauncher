@@ -1,0 +1,18 @@
+theme:
+  background: "#1e1e2ef0"
+  divider: "#3c3c50"
+  primary: "#cdd6f4"
+  secondary: "#a0a0b4"
+  selection: "#6496e6c8"
+  # font: ""
+
+desktop:
+  enabled: true
+
+code:
+  enabled: false
+  dir: ~/code
+  command: "code %s"
+
+folders:
+  enabled: false

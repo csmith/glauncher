@@ -12,8 +12,6 @@ import (
 	"sync"
 
 	"chameth.com/glauncher/internal/search"
-
-	"github.com/csmith/config"
 )
 
 type Provider struct {
@@ -29,22 +27,10 @@ type project struct {
 	path string
 }
 
-type configStruct struct {
-	Dir     string `yaml:"dir"`
-	Command string `yaml:"command"`
-}
-
-func NewProvider() (*Provider, error) {
-	var cfg configStruct
-	home, _ := os.UserHomeDir()
-	cfg.Dir = filepath.Join(home, "code")
-	cfg.Command = "code %s"
-
-	_, _ = config.Load(&cfg, config.DirectoryName("glauncher"), config.FileName("code.yml"))
-
+func NewProvider(dir string, command string) (*Provider, error) {
 	p := &Provider{
-		dir:     cfg.Dir,
-		command: cfg.Command,
+		dir:     dir,
+		command: command,
 		ready:   make(chan struct{}),
 	}
 	go func() {

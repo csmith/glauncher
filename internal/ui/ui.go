@@ -22,10 +22,9 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
-	"github.com/csmith/config"
 	xdraw "golang.org/x/image/draw"
 
+	"chameth.com/glauncher/internal/config"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/x11"
 )
@@ -58,8 +57,8 @@ type App struct {
 	needsRefresh atomic.Bool
 }
 
-func New(providers ...search.Provider) *App {
-	colors := loadThemeColors()
+func New(themeCfg config.ThemeConfig, providers ...search.Provider) *App {
+	colors := parseThemeColors(themeCfg)
 	a := &App{
 		providers: providers,
 		theme:     newTheme(colors),
@@ -516,26 +515,7 @@ func newTheme(colors themeConfig) *material.Theme {
 	return th
 }
 
-func loadThemeColors() themeConfig {
-	type cfg struct {
-		Background string `yaml:"background"`
-		Divider    string `yaml:"divider"`
-		Primary    string `yaml:"primary"`
-		Secondary  string `yaml:"secondary"`
-		Selection  string `yaml:"selection"`
-		Font       string `yaml:"font"`
-	}
-
-	c := cfg{
-		Background: "#1e1e2ef0",
-		Divider:    "#3c3c50",
-		Primary:    "#cdd6f4",
-		Secondary:  "#a0a0b4",
-		Selection:  "#6496e6c8",
-	}
-
-	_, _ = config.Load(&c, config.DirectoryName("glauncher"), config.FileName("theme.yml"))
-
+func parseThemeColors(c config.ThemeConfig) themeConfig {
 	return themeConfig{
 		background: mustParseColor(c.Background),
 		divider:    mustParseColor(c.Divider),
