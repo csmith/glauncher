@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"chameth.com/glauncher/internal/arch"
+	"chameth.com/glauncher/internal/calc"
 	"chameth.com/glauncher/internal/code"
 	"chameth.com/glauncher/internal/config"
 	"chameth.com/glauncher/internal/desktop"
@@ -38,6 +39,10 @@ func main() {
 
 	if cfg.Arch.Enabled {
 		providers = append(providers, arch.NewProvider())
+	}
+
+	if cfg.Calc.Enabled {
+		providers = append(providers, calc.NewProvider())
 	}
 
 	app := ui.New(cfg.Theme, providers...)

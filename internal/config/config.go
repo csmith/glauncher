@@ -13,6 +13,7 @@ type Config struct {
 	Code    CodeConfig    `yaml:"code"`
 	Folders FoldersConfig `yaml:"folders"`
 	Arch    ArchConfig    `yaml:"arch"`
+	Calc    CalcConfig    `yaml:"calc"`
 }
 
 type ThemeConfig struct {
@@ -39,6 +40,10 @@ type FoldersConfig struct {
 }
 
 type ArchConfig struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type CalcConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
