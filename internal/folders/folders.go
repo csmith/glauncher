@@ -29,6 +29,32 @@ func (p *Provider) Search(query string) []search.Result {
 		return nil
 	}
 
+	var results []search.Result
+
+	if prefix == "" {
+		cleanDir := strings.TrimRight(dir, "/")
+		if cleanDir == "" && dir == "/" {
+			cleanDir = "/"
+		}
+		if cleanDir != "" {
+			name := cleanDir[strings.LastIndex(cleanDir, "/")+1:]
+			if name == "" {
+				name = "/"
+			}
+			results = append(results, search.Result{
+				Name:        name,
+				Description: dir,
+				Icon:        folderIcon(),
+				Query:       expanded,
+				Exec: func(path string) func() error {
+					return func() error {
+						return launch(path)
+					}
+				}(cleanDir),
+			})
+		}
+	}
+
 	prefixLower := strings.ToLower(prefix)
 	var matches []string
 	for _, e := range entries {
@@ -45,19 +71,19 @@ func (p *Provider) Search(query string) []search.Result {
 		matches = append(matches, name)
 	}
 
-	results := make([]search.Result, len(matches))
-	for i, name := range matches {
+	for _, name := range matches {
 		fullPath := dir + name
-		results[i] = search.Result{
+		results = append(results, search.Result{
 			Name:        name,
-			Description: fullPath,
+			Description: fullPath + "/",
 			Icon:        folderIcon(),
+			Query:       expanded,
 			Exec: func(path string) func() error {
 				return func() error {
 					return launch(path)
 				}
 			}(fullPath),
-		}
+		})
 	}
 
 	return results
