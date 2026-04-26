@@ -377,14 +377,17 @@ func (a *App) layoutInput(gtx layout.Context) layout.Dimensions {
 	h := gtx.Dp(unit.Dp(inputHeightDp))
 	gtx.Constraints.Min.Y = h
 	gtx.Constraints.Max.Y = h
-	padding := layout.UniformInset(unit.Dp(12))
-	return padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		ed := material.Editor(a.theme, &a.editor, "Search applications...")
-		ed.TextSize = unit.Sp(18)
-		ed.Color = a.colors.primary
-		ed.HintColor = color.NRGBA{R: 140, G: 140, B: 160, A: 200}
-		ed.SelectionColor = color.NRGBA{R: 100, G: 140, B: 220, A: 100}
-		return ed.Layout(gtx)
+	inset := layout.Inset{Left: unit.Dp(12), Right: unit.Dp(12)}
+	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			ed := material.Editor(a.theme, &a.editor, "Search...")
+			ed.TextSize = unit.Sp(18)
+			ed.Color = a.colors.primary
+			ed.HintColor = a.colors.secondary
+			ed.SelectionColor = a.colors.selection
+			return ed.Layout(gtx)
+		})
 	})
 }
 
