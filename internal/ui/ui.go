@@ -85,6 +85,12 @@ func (a *App) Run() {
 					a.window.Invalidate()
 				}()
 			}
+			if asp, ok := p.(search.AsyncSearchProvider); ok {
+				asp.SetInvalidate(func() {
+					a.needsRefresh.Store(true)
+					a.window.Invalidate()
+				})
+			}
 		}
 
 		if err := a.loop(); err != nil {

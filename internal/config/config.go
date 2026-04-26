@@ -12,6 +12,7 @@ type Config struct {
 	Desktop DesktopConfig `yaml:"desktop"`
 	Code    CodeConfig    `yaml:"code"`
 	Folders FoldersConfig `yaml:"folders"`
+	Arch    ArchConfig    `yaml:"arch"`
 }
 
 type ThemeConfig struct {
@@ -34,6 +35,10 @@ type CodeConfig struct {
 }
 
 type FoldersConfig struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type ArchConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 

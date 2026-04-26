@@ -16,3 +16,8 @@ type Provider interface {
 type AsyncInitializer interface {
 	Ready() <-chan struct{}
 }
+
+type AsyncSearchProvider interface {
+	Provider
+	SetInvalidate(f func())
+}

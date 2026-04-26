@@ -16,3 +16,6 @@ code:
 
 folders:
   enabled: false
+
+arch:
+  enabled: false

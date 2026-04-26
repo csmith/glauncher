@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"chameth.com/glauncher/internal/arch"
 	"chameth.com/glauncher/internal/code"
 	"chameth.com/glauncher/internal/config"
 	"chameth.com/glauncher/internal/desktop"
@@ -33,6 +34,10 @@ func main() {
 
 	if cfg.Folders.Enabled {
 		providers = append(providers, folders.NewProvider())
+	}
+
+	if cfg.Arch.Enabled {
+		providers = append(providers, arch.NewProvider())
 	}
 
 	app := ui.New(cfg.Theme, providers...)
