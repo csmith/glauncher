@@ -470,25 +470,28 @@ func (a *App) layoutResultText(gtx layout.Context, r search.Result, selected boo
 		descColor = color.NRGBA{R: 200, G: 200, B: 220, A: 255}
 	}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			label := material.Body1(a.theme, r.Name)
-			label.Color = nameColor
-			label.TextSize = unit.Sp(15)
-			label.MaxLines = 1
-			return label.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if r.Description == "" {
-				return layout.Dimensions{}
-			}
-			label := material.Body2(a.theme, r.Description)
-			label.Color = descColor
-			label.TextSize = unit.Sp(12)
-			label.MaxLines = 1
-			return label.Layout(gtx)
-		}),
-	)
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				label := material.Body1(a.theme, r.Name)
+				label.Color = nameColor
+				label.TextSize = unit.Sp(15)
+				label.MaxLines = 1
+				return label.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if r.Description == "" {
+					return layout.Dimensions{}
+				}
+				label := material.Body2(a.theme, r.Description)
+				label.Color = descColor
+				label.TextSize = unit.Sp(12)
+				label.MaxLines = 1
+				return label.Layout(gtx)
+			}),
+		)
+	})
 }
 
 func scaleImage(src image.Image, size int) image.Image {
