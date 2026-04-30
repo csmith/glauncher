@@ -26,13 +26,14 @@ type Provider struct {
 }
 
 type entry struct {
-	name         string
-	comment      string
-	iconName     string
-	exec         string
-	terminal     bool
-	nameLower    string
-	commentLower string
+	name          string
+	comment       string
+	iconName      string
+	exec          string
+	terminal      bool
+	nameLower     string
+	commentLower  string
+	keywordsLower string
 }
 
 func NewProvider() *Provider {
@@ -63,7 +64,7 @@ func (p *Provider) Search(query string) []search.Result {
 
 	var results []search.Result
 	for _, e := range p.entries {
-		if !strings.HasPrefix(e.nameLower, q) && !strings.Contains(e.nameLower, q) && !strings.Contains(e.commentLower, q) {
+		if !strings.HasPrefix(e.nameLower, q) && !strings.Contains(e.nameLower, q) && !strings.Contains(e.commentLower, q) && !strings.Contains(e.keywordsLower, q) {
 			continue
 		}
 		results = append(results, search.Result{
@@ -152,6 +153,7 @@ func parseDesktopFile(path string) *entry {
 	e := &entry{}
 	inDesktopEntry := false
 	isApplication := false
+	var keywords string
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -208,6 +210,10 @@ func parseDesktopFile(path string) *entry {
 			if value == "true" {
 				return nil
 			}
+		case "Keywords":
+			if keywords == "" {
+				keywords = value
+			}
 		}
 	}
 
@@ -217,6 +223,7 @@ func parseDesktopFile(path string) *entry {
 
 	e.nameLower = strings.ToLower(e.name)
 	e.commentLower = strings.ToLower(e.comment)
+	e.keywordsLower = strings.ToLower(strings.ReplaceAll(keywords, ";", " "))
 	return e
 }
 
