@@ -1,0 +1,71 @@
+# This is an example glauncher config file. It is deployed the first time you
+# run glauncher, and won't be updated. You'll need to add new providers
+# yourself when updating.
+
+# Provider: desktop entries search
+# On linux, scans for .desktop files for installed applications. This is
+# generally what is used for app launchers, menus, etc.
+# e.g. typing "fire" will suggest launching "Firefox".
+desktop:
+  enabled: true
+
+# Provider: folder opening
+# Allows you to type a folder name and open it in the default application.
+# e.g. typing "~/Vi" will suggest "$HOME/Videos" for opening.
+folders:
+  enabled: true
+
+# Provider: calculator
+# Responds to basic maths queries, supporting `+`, `-`, `/`, `*`, `^`, `%`
+# and parentheses. Selecting a result copies it to the clipboard.
+# e.g. typing "(2^8)*4" will show the answer of "1024".
+calc:
+  enabled: true
+
+# Provider: search
+# Opens a web search in your default browser. If `always_include` is
+# true, then the search suggestion will always be shown as the last
+# entry in the results. Otherwise prefix the query with the name or
+# alias of the search engine.
+# e.g. typing "g test" will show an option to search for "test" with Google.
+search:
+  enabled: true
+  providers:
+    - name: kagi
+      url: "https://kagi.com/search?q=%s"
+      always_include: false
+    - name: google
+      url: "https://www.google.com/search?q=%s"
+      aliases: ["g"]
+      always_include: false
+
+# Provider: code editor
+# Allows quick opening of projects in your IDE of choice. Typing "code"
+# followed by a project name will suggest matching projects found under
+# the specified directory. The search is recursive, but filters to
+# directories that look like code projects (have VCS or IDE folders).
+# e.g. typing "code gl" will suggest opening
+#      "/home/user/code/public/glauncher" in zed.
+code:
+  enabled: false
+  dir: "/home/user/code"
+  command: "zeditor %s"
+
+# Provider: arch packages
+# Allows quick searching of Arch and AUR packages using the prefix "arch".
+# Selecting a package will open the corresponding webpages.
+# e.g. typing "arch pacman" will list all packages matching "pacman".
+arch:
+  enabled: false
+
+# You can customise the appearance of glauncher by defining a theme.
+# Colours should be in hexidecimal, starting with a '#' and can
+# contain an alpha channel.
+#
+# theme:
+#   background: "#1e1e2ef0"
+#   divider: "#3c3c50"
+#   primary: "#cdd6f4"
+#   secondary: "#a0a0b4"
+#   selection: "#6496e6c8"
+#   font: "Times New Roman"

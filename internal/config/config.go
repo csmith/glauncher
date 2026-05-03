@@ -1,11 +1,17 @@
 package config
 
 import (
+	"bytes"
+	_ "embed"
+	"io"
 	"os"
 	"path/filepath"
 
 	cconfig "github.com/csmith/config"
 )
+
+//go:embed config.example.yml
+var defaultConfig []byte
 
 type Config struct {
 	Theme     ThemeConfig     `yaml:"theme"`
@@ -77,7 +83,13 @@ func Load() (*Config, error) {
 		},
 	}
 
-	_, err := cconfig.Load(&cfg, cconfig.DirectoryName("glauncher"), cconfig.FileName("config.yml"))
+	_, err := cconfig.Load(&cfg,
+		cconfig.DirectoryName("glauncher"),
+		cconfig.FileName("config.yml"),
+		cconfig.DefaultConfig(func() io.Reader {
+			return bytes.NewReader(defaultConfig)
+		}),
+	)
 	if err != nil {
 		return nil, err
 	}
