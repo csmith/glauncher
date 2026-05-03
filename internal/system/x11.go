@@ -1,4 +1,4 @@
-package x11
+package system
 
 /*
 #cgo pkg-config: x11
@@ -10,7 +10,7 @@ import "C"
 
 import "unsafe"
 
-func SetNoDecorations(display unsafe.Pointer, window uintptr) {
+func RemoveX11Decorations(display unsafe.Pointer, window uintptr) {
 	dpy := (*C.Display)(display)
 	win := C.Window(window)
 
@@ -22,8 +22,8 @@ func SetNoDecorations(display unsafe.Pointer, window uintptr) {
 	}
 
 	var hints [5]C.long
-	hints[0] = 2 // MWM_HINTS_DECORATIONS
-	hints[2] = 0 // no decorations
+	hints[0] = 2
+	hints[2] = 0
 
 	C.XChangeProperty(dpy, win, atom, atom, 32,
 		C.PropModeReplace, (*C.uchar)(unsafe.Pointer(&hints[0])), 5)

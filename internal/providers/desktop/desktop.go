@@ -7,12 +7,12 @@ import (
 	"image/color"
 	"image/png"
 	"os"
-	execcmd "os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/system"
 
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
@@ -368,12 +368,7 @@ func launch(execLine string) error {
 		return fmt.Errorf("empty command")
 	}
 
-	c := execcmd.Command(parts[0], parts[1:]...)
-	c.Stdin = nil
-	c.Stdout = nil
-	c.Stderr = nil
-	c.SysProcAttr = &syscallSetProcessGroupID
-	return c.Start()
+	return system.Launch(parts[0], parts[1:]...)
 }
 
 func cleanExec(s string) string {

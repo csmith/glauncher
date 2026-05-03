@@ -4,10 +4,10 @@ import (
 	"image"
 	"image/color"
 	"os"
-	execcmd "os/exec"
 	"strings"
 
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/system"
 )
 
 type Provider struct{}
@@ -105,12 +105,7 @@ func splitPath(query string) (dir string, prefix string) {
 }
 
 func launch(path string) error {
-	c := execcmd.Command(openCommand, path)
-	c.Stdin = nil
-	c.Stdout = nil
-	c.Stderr = nil
-	c.SysProcAttr = &syscallSetProcessGroupID
-	return c.Start()
+	return system.OpenURL(path)
 }
 
 func folderIcon() image.Image {

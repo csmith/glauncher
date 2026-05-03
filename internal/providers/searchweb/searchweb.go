@@ -7,9 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	execcmd "os/exec"
-
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/system"
 )
 
 type Entry struct {
@@ -110,10 +109,5 @@ func searchIcon() image.Image {
 }
 
 func openURL(u string) error {
-	c := execcmd.Command(openCommand, u)
-	c.Stdin = nil
-	c.Stdout = nil
-	c.Stderr = nil
-	c.SysProcAttr = &syscallSetProcessGroupID
-	return c.Start()
+	return system.OpenURL(u)
 }

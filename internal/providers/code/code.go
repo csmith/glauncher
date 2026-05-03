@@ -5,12 +5,12 @@ import (
 	"image"
 	"image/color"
 	"os"
-	execcmd "os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/system"
 )
 
 type Provider struct {
@@ -125,12 +125,7 @@ func launch(command string, path string) error {
 		return fmt.Errorf("empty command")
 	}
 
-	c := execcmd.Command(parts[0], parts[1:]...)
-	c.Stdin = nil
-	c.Stdout = nil
-	c.Stderr = nil
-	c.SysProcAttr = &syscallSetProcessGroupID
-	return c.Start()
+	return system.Launch(parts[0], parts[1:]...)
 }
 
 func folderIcon() image.Image {

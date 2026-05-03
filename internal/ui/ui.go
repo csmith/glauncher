@@ -14,7 +14,7 @@ import (
 	"gioui.org/app"
 	"gioui.org/font"
 	"gioui.org/io/key"
-	"gioui.org/io/system"
+	giosys "gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -26,7 +26,7 @@ import (
 
 	"chameth.com/glauncher/internal/config"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/x11"
+	"chameth.com/glauncher/internal/system"
 )
 
 const resultHeightDp = 48
@@ -111,7 +111,7 @@ func (a *App) loop() error {
 			return e.Err
 		case app.ConfigEvent:
 			if focused && !e.Config.Focused {
-				a.window.Perform(system.ActionClose)
+				a.window.Perform(giosys.ActionClose)
 			}
 			if e.Config.Focused {
 				focused = true
@@ -122,7 +122,7 @@ func (a *App) loop() error {
 			e.Frame(gtx.Ops)
 		case app.X11ViewEvent:
 			if e.Valid() {
-				x11.SetNoDecorations(e.Display, e.Window)
+				system.RemoveX11Decorations(e.Display, e.Window)
 			}
 		}
 	}
@@ -161,7 +161,7 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 
 		switch ke.Name {
 		case key.NameEscape:
-			a.window.Perform(system.ActionClose)
+			a.window.Perform(giosys.ActionClose)
 		case key.NameUpArrow:
 			if a.selected > 0 {
 				a.selected--
@@ -184,7 +184,7 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 						log.Printf("launch error: %v", err)
 					}
 				}()
-				a.window.Perform(system.ActionClose)
+				a.window.Perform(giosys.ActionClose)
 			}
 		case key.NameDeleteBackward:
 			a.deleteWordBack()

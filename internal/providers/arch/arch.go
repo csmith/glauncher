@@ -10,9 +10,8 @@ import (
 	"sync"
 	"time"
 
-	execcmd "os/exec"
-
 	"chameth.com/glauncher/internal/search"
+	"chameth.com/glauncher/internal/system"
 )
 
 const debounceDelay = time.Second
@@ -190,12 +189,7 @@ type aurResult struct {
 }
 
 func openURL(url string) error {
-	c := execcmd.Command(openCommand, url)
-	c.Stdin = nil
-	c.Stdout = nil
-	c.Stderr = nil
-	c.SysProcAttr = &syscallSetProcessGroupID
-	return c.Start()
+	return system.OpenURL(url)
 }
 
 func packageIcon() image.Image {
