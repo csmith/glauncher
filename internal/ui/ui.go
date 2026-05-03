@@ -24,6 +24,7 @@ import (
 	"gioui.org/widget/material"
 	xdraw "golang.org/x/image/draw"
 
+	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/config"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
@@ -449,7 +450,7 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 
 func (a *App) layoutIcon(gtx layout.Context, img image.Image) layout.Dimensions {
 	if img == nil {
-		img = placeholderIcon()
+		img = assets.Placeholder(48)
 	}
 
 	size := gtx.Dp(unit.Dp(32))
@@ -502,18 +503,6 @@ func scaleImage(src image.Image, size int) image.Image {
 	dst := image.NewRGBA(image.Rect(0, 0, size, size))
 	xdraw.CatmullRom.Scale(dst, dst.Bounds(), src, sb, xdraw.Over, nil)
 	return dst
-}
-
-func placeholderIcon() image.Image {
-	const s = 32
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 80, G: 80, B: 100, A: 255}
-	for y := range s {
-		for x := range s {
-			img.Set(x, y, bg)
-		}
-	}
-	return img
 }
 
 func newTheme(colors themeConfig) *material.Theme {

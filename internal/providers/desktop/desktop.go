@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"image"
-	"image/color"
 	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
 
@@ -229,7 +229,7 @@ func parseDesktopFile(path string) *entry {
 
 func (p *Provider) lookupIcon(name string) image.Image {
 	if name == "" {
-		return placeholderIcon()
+		return assets.Placeholder(48)
 	}
 
 	if img, ok := p.iconCache[name]; ok {
@@ -242,7 +242,7 @@ func (p *Provider) lookupIcon(name string) image.Image {
 	}
 
 	p.iconCache[name] = nil
-	return placeholderIcon()
+	return assets.Placeholder(48)
 }
 
 func (p *Provider) findIconFile(name string) image.Image {
@@ -347,18 +347,6 @@ func resizeIcon(img image.Image, size int) image.Image {
 		}
 	}
 	return dst
-}
-
-func placeholderIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 80, G: 80, B: 100, A: 255}
-	for y := range s {
-		for x := range s {
-			img.Set(x, y, bg)
-		}
-	}
-	return img
 }
 
 func launch(execLine string) error {

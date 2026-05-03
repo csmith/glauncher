@@ -1,11 +1,10 @@
 package folders
 
 import (
-	"image"
-	"image/color"
 	"os"
 	"strings"
 
+	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
 )
@@ -41,7 +40,7 @@ func (p *Provider) Search(query string) []search.Result {
 		results = append(results, search.Result{
 			Name:        name,
 			Description: dir,
-			Icon:        folderIcon(),
+			Icon:        assets.Folder(48),
 			Query:       expanded,
 			Exec: func(path string) func() error {
 				return func() error {
@@ -72,7 +71,7 @@ func (p *Provider) Search(query string) []search.Result {
 		results = append(results, search.Result{
 			Name:        name,
 			Description: fullPath + "/",
-			Icon:        folderIcon(),
+			Icon:        assets.Folder(48),
 			Query:       expanded,
 			Exec: func(path string) func() error {
 				return func() error {
@@ -106,21 +105,4 @@ func splitPath(query string) (dir string, prefix string) {
 
 func launch(path string) error {
 	return system.OpenURL(path)
-}
-
-func folderIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 100, G: 140, B: 200, A: 255}
-	tab := color.NRGBA{R: 80, G: 120, B: 180, A: 255}
-	for y := range s {
-		for x := range s {
-			if y < 10 && x < 16 {
-				img.Set(x, y, tab)
-			} else if y >= 8 {
-				img.Set(x, y, bg)
-			}
-		}
-	}
-	return img
 }

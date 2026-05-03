@@ -2,11 +2,10 @@ package searchweb
 
 import (
 	"fmt"
-	"image"
-	"image/color"
 	"net/url"
 	"strings"
 
+	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
 )
@@ -81,7 +80,7 @@ func makeResult(sp Entry, searchTerm string, priority int) search.Result {
 	return search.Result{
 		Name:        fmt.Sprintf("Search on %s", sp.Name),
 		Description: searchTerm,
-		Icon:        searchIcon(),
+		Icon:        assets.Search(48),
 		Exec: func(u string) func() error {
 			return func() error {
 				return openURL(u)
@@ -89,23 +88,6 @@ func makeResult(sp Entry, searchTerm string, priority int) search.Result {
 		}(fmt.Sprintf(sp.URL, url.QueryEscape(searchTerm))),
 		Priority: priority,
 	}
-}
-
-func searchIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 70, G: 130, B: 200, A: 255}
-	for y := range s {
-		for x := range s {
-			img.Set(x, y, bg)
-		}
-	}
-	ln := color.NRGBA{R: 255, G: 255, B: 255, A: 220}
-	for i := 12; i < 36; i++ {
-		img.Set(i, 24, ln)
-		img.Set(24, i, ln)
-	}
-	return img
 }
 
 func openURL(u string) error {

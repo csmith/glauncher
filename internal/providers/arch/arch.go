@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"image/color"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
 )
@@ -54,7 +54,7 @@ func (p *Provider) Search(query string) []search.Result {
 		results := p.results
 		p.mu.Unlock()
 		if len(results) == 0 {
-			return []search.Result{statusResult(fmt.Sprintf("No results found for \"%s\"", searchTerm), statusIcon())}
+			return []search.Result{statusResult(fmt.Sprintf("No results found for \"%s\"", searchTerm), assets.Error(48))}
 		}
 		return results
 	}
@@ -67,7 +67,7 @@ func (p *Provider) Search(query string) []search.Result {
 	p.timer = time.AfterFunc(debounceDelay, p.doSearch)
 	p.mu.Unlock()
 
-	return []search.Result{statusResult(fmt.Sprintf("Searching for \"%s\"...", searchTerm), statusIcon())}
+	return []search.Result{statusResult(fmt.Sprintf("Searching for \"%s\"...", searchTerm), assets.Loading(48))}
 }
 
 func (p *Provider) doSearch() {
@@ -101,7 +101,7 @@ func (p *Provider) doSearch() {
 		results = append(results, search.Result{
 			Name:        pkg.Pkgname,
 			Description: fmt.Sprintf("[%s/%s] %s", pkg.Repo, pkg.Arch, pkg.Pkgdesc),
-			Icon:        packageIcon(),
+			Icon:        assets.Arch(48),
 			Query:       searchTerm,
 			Exec: func(u string) func() error {
 				return func() error {
@@ -115,7 +115,7 @@ func (p *Provider) doSearch() {
 		results = append(results, search.Result{
 			Name:        pkg.Name,
 			Description: fmt.Sprintf("[AUR] %s", pkg.Description),
-			Icon:        aurIcon(),
+			Icon:        assets.ArchAlt(48),
 			Query:       searchTerm,
 			Exec: func(u string) func() error {
 				return func() error {
@@ -192,48 +192,6 @@ func openURL(url string) error {
 	return system.OpenURL(url)
 }
 
-func packageIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 23, G: 147, B: 209, A: 255}
-	darker := color.NRGBA{R: 15, G: 110, B: 170, A: 255}
-	for y := range s {
-		for x := range s {
-			if y < 6 || y >= s-4 {
-				img.Set(x, y, darker)
-			} else {
-				img.Set(x, y, bg)
-			}
-		}
-	}
-	mid := s / 2
-	for y := 8; y < s-6; y++ {
-		img.Set(mid, y, color.NRGBA{R: 255, G: 255, B: 255, A: 200})
-	}
-	return img
-}
-
-func aurIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 24, G: 120, B: 180, A: 255}
-	darker := color.NRGBA{R: 16, G: 90, B: 145, A: 255}
-	for y := range s {
-		for x := range s {
-			if y < 6 || y >= s-4 {
-				img.Set(x, y, darker)
-			} else {
-				img.Set(x, y, bg)
-			}
-		}
-	}
-	mid := s / 2
-	for y := 8; y < s-6; y++ {
-		img.Set(mid, y, color.NRGBA{R: 255, G: 200, B: 50, A: 200})
-	}
-	return img
-}
-
 func statusResult(text string, icon image.Image) search.Result {
 	return search.Result{
 		Name:        text,
@@ -241,16 +199,4 @@ func statusResult(text string, icon image.Image) search.Result {
 		Icon:        icon,
 		Exec:        func() error { return nil },
 	}
-}
-
-func statusIcon() image.Image {
-	const s = 48
-	img := image.NewRGBA(image.Rect(0, 0, s, s))
-	bg := color.NRGBA{R: 100, G: 100, B: 120, A: 255}
-	for y := range s {
-		for x := range s {
-			img.Set(x, y, bg)
-		}
-	}
-	return img
 }
