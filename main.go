@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"chameth.com/glauncher/internal/arch"
-	"chameth.com/glauncher/internal/calc"
-	"chameth.com/glauncher/internal/code"
 	"chameth.com/glauncher/internal/config"
-	"chameth.com/glauncher/internal/desktop"
-	"chameth.com/glauncher/internal/folders"
+	"chameth.com/glauncher/internal/providers/arch"
+	"chameth.com/glauncher/internal/providers/calc"
+	"chameth.com/glauncher/internal/providers/code"
+	"chameth.com/glauncher/internal/providers/desktop"
+	"chameth.com/glauncher/internal/providers/folders"
+	"chameth.com/glauncher/internal/providers/searchweb"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/searchweb"
 	"chameth.com/glauncher/internal/ui"
 )
 
