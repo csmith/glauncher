@@ -3,6 +3,7 @@ package assets
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -21,7 +22,7 @@ func init() {
 }
 
 func load(name string, size int) image.Image {
-	key := name + ":" + string(rune(size))
+	key := fmt.Sprintf("%s:%d", name, size)
 	if img, ok := cache[key]; ok {
 		return img
 	}

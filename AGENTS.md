@@ -22,9 +22,12 @@ CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go 
 - `main.go` — entrypoint; loads unified config, conditionally creates enabled providers
 - `internal/config/` — unified config loading from `~/.config/glauncher/config.yml` (`config.example.yml` in repo root shows all options)
 - `internal/search/` — `search.Provider` interface and `search.Result` struct
-- `internal/desktop/` — implements `search.Provider`: parses `.desktop` files, loads icons, launches apps. Has platform-specific files (`sys_linux.go` / `sys_other.go`) for process group ID handling
-- `internal/code/` — implements `search.Provider`: scans a directory for version-controlled projects, opens them in an editor
-- `internal/folders/` — implements `search.Provider`: opens directories by path
+- `internal/providers/desktop/` — implements `search.Provider`: parses `.desktop` files, loads icons, launches apps
+- `internal/providers/code/` — implements `search.Provider`: scans a directory for version-controlled projects, opens them in an editor
+- `internal/providers/folders/` — implements `search.Provider`: opens directories by path
+- `internal/providers/arch/` — implements `search.Provider`: searches Arch Linux and AUR packages
+- `internal/providers/calc/` — implements `search.Provider`: evaluates math expressions
+- `internal/providers/searchweb/` — implements `search.Provider`: opens web searches
 - `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons
 
 ## Configuration

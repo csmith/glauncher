@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -135,7 +136,7 @@ func (p *Provider) doSearch() {
 }
 
 func (p *Provider) searchOfficial(query string) []officialResult {
-	url := fmt.Sprintf("https://archlinux.org/packages/search/json/?q=%s", query)
+	url := fmt.Sprintf("https://archlinux.org/packages/search/json/?q=%s", url.QueryEscape(query))
 	resp, err := p.client.Get(url)
 	if err != nil {
 		return nil
@@ -156,7 +157,7 @@ func (p *Provider) searchOfficial(query string) []officialResult {
 }
 
 func (p *Provider) searchAUR(query string) []aurResult {
-	url := fmt.Sprintf("https://aur.archlinux.org/rpc/v5/search/%s", query)
+	url := fmt.Sprintf("https://aur.archlinux.org/rpc/v5/search/%s", url.QueryEscape(query))
 	resp, err := p.client.Get(url)
 	if err != nil {
 		return nil
