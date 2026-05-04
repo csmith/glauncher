@@ -2,7 +2,12 @@ package system
 
 import (
 	execcmd "os/exec"
+	"syscall"
 )
+
+var OpenCommand = "xdg-open"
+
+var processGroupAttr = syscall.SysProcAttr{Setpgid: true}
 
 func Launch(name string, args ...string) error {
 	c := execcmd.Command(name, args...)
