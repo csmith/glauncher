@@ -10,6 +10,7 @@ import (
 	"chameth.com/glauncher/internal/providers/desktop"
 	"chameth.com/glauncher/internal/providers/folders"
 	"chameth.com/glauncher/internal/providers/searchweb"
+	"chameth.com/glauncher/internal/providers/snippets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/ui"
 )
@@ -57,6 +58,18 @@ func main() {
 			})
 		}
 		providers = append(providers, searchweb.NewProvider(entries))
+	}
+
+	if cfg.Snippets.Enabled {
+		var items []snippets.Entry
+		for _, s := range cfg.Snippets.Items {
+			items = append(items, snippets.Entry{
+				Name:    s.Name,
+				Aliases: s.Aliases,
+				Content: s.Content,
+			})
+		}
+		providers = append(providers, snippets.NewProvider(items))
 	}
 
 	app := ui.New(cfg.Theme, providers...)

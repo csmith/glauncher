@@ -61,4 +61,5 @@ func Error(size int) image.Image       { return load("error", size) }
 func Folder(size int) image.Image      { return load("folder", size) }
 func Loading(size int) image.Image     { return load("loading", size) }
 func Placeholder(size int) image.Image { return load("placeholder", size) }
+func Copy(size int) image.Image        { return load("copy", size) }
 func Search(size int) image.Image      { return load("search", size) }

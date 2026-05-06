@@ -58,6 +58,18 @@ code:
 arch:
   enabled: false
 
+# Provider: snippets
+# Quick access to predefined text snippets. Typing the name or alias of a
+# snippet will show it as a result. Selecting it copies the content to the
+# clipboard.
+# e.g. typing "tableflip" will show and copy the emoji when selected.
+snippets:
+  enabled: false
+  items:
+    - name: tableflip
+      aliases: ["tf"] 
+      content: "(╯°□°)╯︵ ┻━┻"
+
 # You can customise the appearance of glauncher by defining a theme.
 # Colours should be in hexidecimal, starting with a '#' and can
 # contain an alpha channel.

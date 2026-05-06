@@ -62,6 +62,12 @@ the site name/alias as a prefix.
 
 ![](./screenshots/search.png?raw=true)
 
+### Snippets
+
+Configurable text snippets that are copied to your clipboard.
+
+![](./screenshots/snippets.png?raw=true)
+
 ## Getting started
 
 Currently you need to manually build and install the project:

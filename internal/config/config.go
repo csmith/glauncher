@@ -21,6 +21,7 @@ type Config struct {
 	Arch      ArchConfig      `yaml:"arch"`
 	Calc      CalcConfig      `yaml:"calc"`
 	SearchWeb SearchWebConfig `yaml:"search"`
+	Snippets  SnippetsConfig  `yaml:"snippets"`
 }
 
 type ThemeConfig struct {
@@ -64,6 +65,17 @@ type SearchWebEntry struct {
 	Aliases       []string `yaml:"aliases"`
 	URL           string   `yaml:"url"`
 	AlwaysInclude bool     `yaml:"always_include"`
+}
+
+type SnippetsConfig struct {
+	Enabled bool           `yaml:"enabled"`
+	Items   []SnippetEntry `yaml:"items"`
+}
+
+type SnippetEntry struct {
+	Name    string   `yaml:"name"`
+	Aliases []string `yaml:"aliases"`
+	Content string   `yaml:"content"`
 }
 
 func Load() (*Config, error) {
