@@ -1,0 +1,17 @@
+name: go build
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: meta/workflows/.forgejo/workflows/go-build.yml@master
+    runs-on: docker
+    with:
+      apt_packages: >-
+        gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev
+        libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev
+        libffi-dev libxcursor-dev libvulkan-dev
