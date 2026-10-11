@@ -25,7 +25,15 @@ func RemoveX11Decorations(display unsafe.Pointer, window uintptr) {
 	hints[0] = 2
 	hints[2] = 0
 
-	C.XChangeProperty(dpy, win, atom, atom, 32,
-		C.PropModeReplace, (*C.uchar)(unsafe.Pointer(&hints[0])), 5)
+	C.XChangeProperty(
+		dpy,
+		win,
+		atom,
+		atom,
+		32,
+		C.PropModeReplace,
+		(*C.uchar)(unsafe.Pointer(&hints[0])),
+		5,
+	)
 	C.XFlush(dpy)
 }

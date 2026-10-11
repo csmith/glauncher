@@ -1,6 +1,7 @@
 package calc
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -27,6 +28,17 @@ type token struct {
 	val float64
 }
 
+var operators = map[byte]tokenType{
+	'+': tokenPlus,
+	'-': tokenMinus,
+	'*': tokenStar,
+	'/': tokenSlash,
+	'%': tokenPercent,
+	'^': tokenCaret,
+	'(': tokenLParen,
+	')': tokenRParen,
+}
+
 func tokenize(input string) ([]token, error) {
 	var tokens []token
 	i := 0
@@ -36,51 +48,46 @@ func tokenize(input string) ([]token, error) {
 			i++
 			continue
 		}
-		switch ch {
-		case '+':
-			tokens = append(tokens, token{typ: tokenPlus})
-		case '-':
-			tokens = append(tokens, token{typ: tokenMinus})
-		case '*':
-			tokens = append(tokens, token{typ: tokenStar})
-		case '/':
-			tokens = append(tokens, token{typ: tokenSlash})
-		case '%':
-			tokens = append(tokens, token{typ: tokenPercent})
-		case '^':
-			tokens = append(tokens, token{typ: tokenCaret})
-		case '(':
-			tokens = append(tokens, token{typ: tokenLParen})
-		case ')':
-			tokens = append(tokens, token{typ: tokenRParen})
-		default:
-			if ch == '.' || (ch >= '0' && ch <= '9') {
-				start := i
-				dotSeen := false
-				for i < len(input) && (input[i] == '.' || (input[i] >= '0' && input[i] <= '9')) {
-					if input[i] == '.' {
-						if dotSeen {
-							return nil, fmt.Errorf("invalid number at position %d", start)
-						}
-						dotSeen = true
-					}
-					i++
-				}
-				var val float64
-				_, err := fmt.Sscanf(input[start:i], "%f", &val)
-				if err != nil {
-					return nil, fmt.Errorf("invalid number at position %d", start)
-				}
-				tokens = append(tokens, token{typ: tokenNumber, val: val})
-				continue
-			} else {
-				return nil, fmt.Errorf("unexpected character '%c' at position %d", ch, i)
-			}
+		if typ, ok := operators[ch]; ok {
+			tokens = append(tokens, token{typ: typ})
+			i++
+			continue
 		}
-		i++
+		if !isNumberChar(ch) {
+			return nil, fmt.Errorf("unexpected character '%c' at position %d", ch, i)
+		}
+		val, end, err := readNumber(input, i)
+		if err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token{typ: tokenNumber, val: val})
+		i = end
 	}
 	tokens = append(tokens, token{typ: tokenEOF})
 	return tokens, nil
+}
+
+func isNumberChar(ch byte) bool {
+	return ch == '.' || (ch >= '0' && ch <= '9')
+}
+
+func readNumber(input string, start int) (float64, int, error) {
+	i := start
+	dotSeen := false
+	for i < len(input) && isNumberChar(input[i]) {
+		if input[i] == '.' {
+			if dotSeen {
+				return 0, 0, fmt.Errorf("invalid number at position %d", start)
+			}
+			dotSeen = true
+		}
+		i++
+	}
+	var val float64
+	if _, err := fmt.Sscanf(input[start:i], "%f", &val); err != nil {
+		return 0, 0, fmt.Errorf("invalid number at position %d", start)
+	}
+	return val, i, nil
 }
 
 type parser struct {
@@ -95,10 +102,8 @@ func (p *parser) peek() token {
 	return token{typ: tokenEOF}
 }
 
-func (p *parser) next() token {
-	t := p.peek()
+func (p *parser) next() {
 	p.pos++
-	return t
 }
 
 func (p *parser) parseExpr() (float64, error) {
@@ -111,26 +116,21 @@ func (p *parser) parseAddSub() (float64, error) {
 		return 0, err
 	}
 	for {
-		t := p.peek()
-		if t.typ == tokenPlus {
-			p.next()
-			right, err := p.parseMulDivMod()
-			if err != nil {
-				return 0, err
-			}
-			left = left + right
-		} else if t.typ == tokenMinus {
-			p.next()
-			right, err := p.parseMulDivMod()
-			if err != nil {
-				return 0, err
-			}
-			left = left - right
+		op := p.peek().typ
+		if op != tokenPlus && op != tokenMinus {
+			return left, nil
+		}
+		p.next()
+		right, err := p.parseMulDivMod()
+		if err != nil {
+			return 0, err
+		}
+		if op == tokenPlus {
+			left += right
 		} else {
-			break
+			left -= right
 		}
 	}
-	return left, nil
 }
 
 func (p *parser) parseMulDivMod() (float64, error) {
@@ -139,39 +139,37 @@ func (p *parser) parseMulDivMod() (float64, error) {
 		return 0, err
 	}
 	for {
-		t := p.peek()
-		if t.typ == tokenStar {
-			p.next()
-			right, err := p.parsePower()
-			if err != nil {
-				return 0, err
-			}
-			left = left * right
-		} else if t.typ == tokenSlash {
-			p.next()
-			right, err := p.parsePower()
-			if err != nil {
-				return 0, err
-			}
-			if right == 0 {
-				return 0, fmt.Errorf("division by zero")
-			}
-			left = left / right
-		} else if t.typ == tokenPercent {
-			p.next()
-			right, err := p.parsePower()
-			if err != nil {
-				return 0, err
-			}
-			if right == 0 {
-				return 0, fmt.Errorf("modulo by zero")
-			}
-			left = math.Mod(left, right)
-		} else {
-			break
+		op := p.peek().typ
+		if op != tokenStar && op != tokenSlash && op != tokenPercent {
+			return left, nil
+		}
+		p.next()
+		right, err := p.parsePower()
+		if err != nil {
+			return 0, err
+		}
+		left, err = applyMulDivMod(op, left, right)
+		if err != nil {
+			return 0, err
 		}
 	}
-	return left, nil
+}
+
+func applyMulDivMod(op tokenType, left, right float64) (float64, error) {
+	switch op {
+	case tokenSlash:
+		if right == 0 {
+			return 0, errors.New("division by zero")
+		}
+		return left / right, nil
+	case tokenPercent:
+		if right == 0 {
+			return 0, errors.New("modulo by zero")
+		}
+		return math.Mod(left, right), nil
+	default:
+		return left * right, nil
+	}
 }
 
 func (p *parser) parsePower() (float64, error) {
@@ -219,18 +217,18 @@ func (p *parser) parsePrimary() (float64, error) {
 			return 0, err
 		}
 		if p.peek().typ != tokenRParen {
-			return 0, fmt.Errorf("expected ')'")
+			return 0, errors.New("expected ')'")
 		}
 		p.next()
 		return val, nil
 	}
-	return 0, fmt.Errorf("unexpected token")
+	return 0, errors.New("unexpected token")
 }
 
 func evaluate(input string) (float64, error) {
 	input = strings.TrimSpace(input)
 	if input == "" {
-		return 0, fmt.Errorf("empty expression")
+		return 0, errors.New("empty expression")
 	}
 	tokens, err := tokenize(input)
 	if err != nil {
@@ -242,7 +240,7 @@ func evaluate(input string) (float64, error) {
 		return 0, err
 	}
 	if p.peek().typ != tokenEOF {
-		return 0, fmt.Errorf("unexpected trailing characters")
+		return 0, errors.New("unexpected trailing characters")
 	}
 	return result, nil
 }

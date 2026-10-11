@@ -23,12 +23,15 @@ func TestScore(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := score(tt.nameLow, tt.descLow, tt.query)
-			if got != tt.expected {
-				t.Errorf("score(%q, %q, %q) = %d, want %d", tt.nameLow, tt.descLow, tt.query, got, tt.expected)
-			}
-		})
+		t.Run(
+			tt.name,
+			func(t *testing.T) {
+				got := score(tt.nameLow, tt.descLow, tt.query)
+				if got != tt.expected {
+					t.Errorf("score(%q, %q, %q) = %d, want %d", tt.nameLow, tt.descLow, tt.query, got, tt.expected)
+				}
+			},
+		)
 	}
 }
 
@@ -48,12 +51,15 @@ func TestLevenshteinDistance(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.s+"_"+tt.t, func(t *testing.T) {
-			got := LevenshteinDistance(tt.s, tt.t)
-			if got != tt.expected {
-				t.Errorf("LevenshteinDistance(%q, %q) = %d, want %d", tt.s, tt.t, got, tt.expected)
-			}
-		})
+		t.Run(
+			tt.s+"_"+tt.t,
+			func(t *testing.T) {
+				got := LevenshteinDistance(tt.s, tt.t)
+				if got != tt.expected {
+					t.Errorf("LevenshteinDistance(%q, %q) = %d, want %d", tt.s, tt.t, got, tt.expected)
+				}
+			},
+		)
 	}
 }
 
@@ -140,11 +146,10 @@ func TestSortResults_DescriptionMatchScoresLower(t *testing.T) {
 }
 
 func TestSortResults_PerResultQuery(t *testing.T) {
-	r := result
 	results := []Result{
-		{Name: "repacman", Description: "", Icon: r("repacman", "").Icon, Exec: func() error { return nil }, Query: "pacman"},
-		{Name: "arch-manwarn", Description: "", Icon: r("arch-manwarn", "").Icon, Exec: func() error { return nil }, Query: "pacman"},
-		{Name: "pacman", Description: "", Icon: r("pacman", "").Icon, Exec: func() error { return nil }, Query: "pacman"},
+		{Name: "repacman", Query: "pacman"},
+		{Name: "arch-manwarn", Query: "pacman"},
+		{Name: "pacman", Query: "pacman"},
 	}
 
 	SortResults(results, "arch pacman")

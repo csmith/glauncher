@@ -26,13 +26,16 @@ func TestParseQuery(t *testing.T) {
 		{"", nil, false},
 	}
 	for _, tt := range tests {
-		t.Run(tt.query, func(t *testing.T) {
-			terms, ok := parseQuery(launcher, tt.query)
-			assert.Equal(t, tt.ok, ok)
-			if tt.ok {
-				assert.Equal(t, tt.terms, terms)
-			}
-		})
+		t.Run(
+			tt.query,
+			func(t *testing.T) {
+				terms, ok := parseQuery(launcher, tt.query)
+				assert.Equal(t, tt.ok, ok)
+				if tt.ok {
+					assert.Equal(t, tt.terms, terms)
+				}
+			},
+		)
 	}
 }
 
@@ -66,10 +69,14 @@ func TestScan(t *testing.T) {
 	}
 
 	files := scan(dir, []string{"*.md"}, []string{"node_modules"})
-	assert.ElementsMatch(t, []string{
-		filepath.Join(dir, "a.md"),
-		filepath.Join(dir, "sub/b.md"),
-	}, files)
+	assert.ElementsMatch(
+		t,
+		[]string{
+			filepath.Join(dir, "a.md"),
+			filepath.Join(dir, "sub/b.md"),
+		},
+		files,
+	)
 }
 
 func TestSearchFiltersScannedFiles(t *testing.T) {

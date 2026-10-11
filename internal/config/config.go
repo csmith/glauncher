@@ -110,12 +110,15 @@ func Load() (*Config, error) {
 		},
 	}
 
-	_, err := cconfig.Load(&cfg,
+	_, err := cconfig.Load(
+		&cfg,
 		cconfig.DirectoryName("glauncher"),
 		cconfig.FileName("config.yml"),
-		cconfig.DefaultConfig(func() io.Reader {
-			return bytes.NewReader(defaultConfig)
-		}),
+		cconfig.DefaultConfig(
+			func() io.Reader {
+				return bytes.NewReader(defaultConfig)
+			},
+		),
 	)
 	if err != nil {
 		return nil, err

@@ -21,21 +21,21 @@ CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go 
 
 - `main.go` — entrypoint; loads unified config, conditionally creates enabled providers
 - `internal/config/` — unified config loading from `~/.config/glauncher/config.yml` (`config.example.yml` in repo root shows all options)
-- `internal/search/` — `search.Provider` interface and `search.Result` struct
-- `internal/providers/desktop/` — implements `search.Provider`: parses `.desktop` files, loads icons, launches apps
-- `internal/providers/code/` — implements `search.Provider`: scans a directory for version-controlled projects, opens them in an editor
-- `internal/providers/folders/` — implements `search.Provider`: opens directories by path
-- `internal/providers/arch/` — implements `search.Provider`: searches Arch Linux and AUR packages
-- `internal/providers/calc/` — implements `search.Provider`: evaluates math expressions
-- `internal/providers/files/` — implements `search.Provider`: one instance per configured launcher; lists files matching glob patterns under a directory and opens them with a command
-- `internal/providers/searchweb/` — implements `search.Provider`: opens web searches
-- `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons
+- `internal/search/` — `search.Result` struct and result sorting
+- `internal/providers/desktop/` — implements `ui.Provider`: parses `.desktop` files, loads icons, launches apps
+- `internal/providers/code/` — implements `ui.Provider`: scans a directory for version-controlled projects, opens them in an editor
+- `internal/providers/folders/` — implements `ui.Provider`: opens directories by path
+- `internal/providers/arch/` — implements `ui.Provider`: searches Arch Linux and AUR packages
+- `internal/providers/calc/` — implements `ui.Provider`: evaluates math expressions
+- `internal/providers/files/` — implements `ui.Provider`: one instance per configured launcher; lists files matching glob patterns under a directory and opens them with a command
+- `internal/providers/searchweb/` — implements `ui.Provider`: opens web searches
+- `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons; defines the `ui.Provider` interface
 
 ## Configuration
 
 Single `config.yml` loaded from `~/.config/glauncher/config.yml`. Each provider has its own top-level section with an `enabled` bool (defaults to `false`). The `theme` section controls colours and font. See `config.example.yml` for all options.
 
-Adding a new search source means implementing `search.Provider`, adding a config section with an `enabled` field to `internal/config`, and wiring it in `main.go`.
+Adding a new search source means implementing `ui.Provider`, adding a config section with an `enabled` field to `internal/config`, and wiring it in `main.go`.
 
 ## Key details
 

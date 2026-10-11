@@ -1,6 +1,7 @@
 package arch
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -99,31 +100,37 @@ func (p *Provider) doSearch() {
 	var results []search.Result
 	for _, pkg := range official {
 		url := fmt.Sprintf("https://archlinux.org/packages/%s/%s/%s/", pkg.Repo, pkg.Arch, pkg.Pkgname)
-		results = append(results, search.Result{
-			Name:        pkg.Pkgname,
-			Description: fmt.Sprintf("[%s/%s] %s", pkg.Repo, pkg.Arch, pkg.Pkgdesc),
-			Icon:        assets.Arch(48),
-			Query:       searchTerm,
-			Exec: func(u string) func() error {
-				return func() error {
-					return openURL(u)
-				}
-			}(url),
-		})
+		results = append(
+			results,
+			search.Result{
+				Name:        pkg.Pkgname,
+				Description: fmt.Sprintf("[%s/%s] %s", pkg.Repo, pkg.Arch, pkg.Pkgdesc),
+				Icon:        assets.Arch(48),
+				Query:       searchTerm,
+				Exec: func(u string) func() error {
+					return func() error {
+						return openURL(u)
+					}
+				}(url),
+			},
+		)
 	}
 	for _, pkg := range aur {
-		url := fmt.Sprintf("https://aur.archlinux.org/packages/%s", pkg.Name)
-		results = append(results, search.Result{
-			Name:        pkg.Name,
-			Description: fmt.Sprintf("[AUR] %s", pkg.Description),
-			Icon:        assets.ArchAlt(48),
-			Query:       searchTerm,
-			Exec: func(u string) func() error {
-				return func() error {
-					return openURL(u)
-				}
-			}(url),
-		})
+		url := "https://aur.archlinux.org/packages/" + pkg.Name
+		results = append(
+			results,
+			search.Result{
+				Name:        pkg.Name,
+				Description: "[AUR] " + pkg.Description,
+				Icon:        assets.ArchAlt(48),
+				Query:       searchTerm,
+				Exec: func(u string) func() error {
+					return func() error {
+						return openURL(u)
+					}
+				}(url),
+			},
+		)
 	}
 
 	p.mu.Lock()
@@ -136,45 +143,40 @@ func (p *Provider) doSearch() {
 }
 
 func (p *Provider) searchOfficial(query string) []officialResult {
-	url := fmt.Sprintf("https://archlinux.org/packages/search/json/?q=%s", url.QueryEscape(query))
-	resp, err := p.client.Get(url)
-	if err != nil {
-		return nil
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil
-	}
-
 	var data struct {
 		Results []officialResult `json:"results"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if !p.fetchJSON("https://archlinux.org/packages/search/json/?q="+url.QueryEscape(query), &data) {
 		return nil
 	}
 	return data.Results
 }
 
 func (p *Provider) searchAUR(query string) []aurResult {
-	url := fmt.Sprintf("https://aur.archlinux.org/rpc/v5/search/%s", url.QueryEscape(query))
-	resp, err := p.client.Get(url)
-	if err != nil {
+	var data struct {
+		Results []aurResult `json:"results"`
+	}
+	if !p.fetchJSON("https://aur.archlinux.org/rpc/v5/search/"+url.QueryEscape(query), &data) {
 		return nil
+	}
+	return data.Results
+}
+
+func (p *Provider) fetchJSON(target string, v any) bool {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target, nil)
+	if err != nil {
+		return false
+	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil
+		return false
 	}
-
-	var data struct {
-		Results []aurResult `json:"results"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil
-	}
-	return data.Results
+	return json.NewDecoder(resp.Body).Decode(v) == nil
 }
 
 type officialResult struct {

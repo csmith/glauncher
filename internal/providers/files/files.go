@@ -1,7 +1,7 @@
 package files
 
 import (
-	"fmt"
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -86,15 +86,18 @@ func (p *Provider) Search(query string) []search.Result {
 		if !matches(path, p.launcher.Dir, terms) {
 			continue
 		}
-		results = append(results, search.Result{
-			Name:        filepath.Base(path),
-			Description: path,
-			Icon:        assets.File(48),
-			Query:       scoreQuery,
-			Exec: func() error {
-				return launch(p.launcher.Command, path)
+		results = append(
+			results,
+			search.Result{
+				Name:        filepath.Base(path),
+				Description: path,
+				Icon:        assets.File(48),
+				Query:       scoreQuery,
+				Exec: func() error {
+					return launch(p.launcher.Command, path)
+				},
 			},
-		})
+		)
 	}
 	return results
 }
@@ -107,9 +110,12 @@ func parseQuery(launcher Launcher, query string) ([]string, bool) {
 	if len(fields) == 0 {
 		return nil, false
 	}
-	if fields[0] != strings.ToLower(launcher.Name) && !slices.ContainsFunc(launcher.Aliases, func(a string) bool {
-		return strings.ToLower(a) == fields[0]
-	}) {
+	if fields[0] != strings.ToLower(launcher.Name) && !slices.ContainsFunc(
+		launcher.Aliases,
+		func(a string) bool {
+			return strings.ToLower(a) == fields[0]
+		},
+	) {
 		return nil, false
 	}
 	return fields[1:], true
@@ -135,7 +141,7 @@ func matches(path, dir string, terms []string) bool {
 func launch(cmd, path string) error {
 	parts := commandLine(cmd, path)
 	if len(parts) == 0 {
-		return fmt.Errorf("no command configured")
+		return errors.New("no command configured")
 	}
 	return system.Launch(parts[0], parts[1:]...)
 }
@@ -160,25 +166,31 @@ func commandLine(cmd, path string) []string {
 
 func scan(dir string, patterns, exclude []string) []string {
 	var files []string
-	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		name := d.Name()
-		if d.IsDir() {
-			if path != dir && (strings.HasPrefix(name, ".") || slices.Contains(exclude, name)) {
-				return filepath.SkipDir
+	_ = filepath.WalkDir(
+		dir,
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			name := d.Name()
+			if d.IsDir() {
+				if path != dir && (strings.HasPrefix(name, ".") || slices.Contains(exclude, name)) {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if slices.ContainsFunc(
+				patterns,
+				func(p string) bool {
+					ok, _ := filepath.Match(p, name)
+					return ok
+				},
+			) {
+				files = append(files, path)
 			}
 			return nil
-		}
-		if slices.ContainsFunc(patterns, func(p string) bool {
-			ok, _ := filepath.Match(p, name)
-			return ok
-		}) {
-			files = append(files, path)
-		}
-		return nil
-	})
+		},
+	)
 	return files
 }
 

@@ -37,17 +37,20 @@ func (p *Provider) Search(query string) []search.Result {
 		} else {
 			name = "/"
 		}
-		results = append(results, search.Result{
-			Name:        name,
-			Description: dir,
-			Icon:        assets.Folder(48),
-			Query:       expanded,
-			Exec: func(path string) func() error {
-				return func() error {
-					return launch(path)
-				}
-			}(strings.TrimRight(dir, "/")),
-		})
+		results = append(
+			results,
+			search.Result{
+				Name:        name,
+				Description: dir,
+				Icon:        assets.Folder(48),
+				Query:       expanded,
+				Exec: func(path string) func() error {
+					return func() error {
+						return launch(path)
+					}
+				}(strings.TrimRight(dir, "/")),
+			},
+		)
 	}
 
 	prefixLower := strings.ToLower(prefix)
@@ -68,17 +71,20 @@ func (p *Provider) Search(query string) []search.Result {
 
 	for _, name := range matches {
 		fullPath := dir + name
-		results = append(results, search.Result{
-			Name:        name,
-			Description: fullPath + "/",
-			Icon:        assets.Folder(48),
-			Query:       expanded,
-			Exec: func(path string) func() error {
-				return func() error {
-					return launch(path)
-				}
-			}(fullPath),
-		})
+		results = append(
+			results,
+			search.Result{
+				Name:        name,
+				Description: fullPath + "/",
+				Icon:        assets.Folder(48),
+				Query:       expanded,
+				Exec: func(path string) func() error {
+					return func() error {
+						return launch(path)
+					}
+				}(fullPath),
+			},
+		)
 	}
 
 	return results

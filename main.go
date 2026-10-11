@@ -12,7 +12,6 @@ import (
 	"chameth.com/glauncher/internal/providers/folders"
 	"chameth.com/glauncher/internal/providers/searchweb"
 	"chameth.com/glauncher/internal/providers/snippets"
-	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/ui"
 )
 
@@ -22,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var providers []search.Provider
+	var providers []ui.Provider
 
 	if cfg.Desktop.Enabled {
 		providers = append(providers, desktop.NewProvider())
@@ -49,40 +48,51 @@ func main() {
 	}
 
 	if cfg.SearchWeb.Enabled {
-		var entries []searchweb.Entry
+		entries := make([]searchweb.Entry, 0, len(cfg.SearchWeb.Providers))
 		for _, p := range cfg.SearchWeb.Providers {
-			entries = append(entries, searchweb.Entry{
-				Name:          p.Name,
-				Aliases:       p.Aliases,
-				URL:           p.URL,
-				AlwaysInclude: p.AlwaysInclude,
-			})
+			entries = append(
+				entries,
+				searchweb.Entry{
+					Name:          p.Name,
+					Aliases:       p.Aliases,
+					URL:           p.URL,
+					AlwaysInclude: p.AlwaysInclude,
+				},
+			)
 		}
 		providers = append(providers, searchweb.NewProvider(entries))
 	}
 
 	if cfg.Snippets.Enabled {
-		var items []snippets.Entry
+		items := make([]snippets.Entry, 0, len(cfg.Snippets.Items))
 		for _, s := range cfg.Snippets.Items {
-			items = append(items, snippets.Entry{
-				Name:    s.Name,
-				Aliases: s.Aliases,
-				Content: s.Content,
-			})
+			items = append(
+				items,
+				snippets.Entry{
+					Name:    s.Name,
+					Aliases: s.Aliases,
+					Content: s.Content,
+				},
+			)
 		}
 		providers = append(providers, snippets.NewProvider(items))
 	}
 
 	if cfg.Files.Enabled {
 		for _, l := range cfg.Files.Launchers {
-			providers = append(providers, files.NewProvider(files.Launcher{
-				Name:     l.Name,
-				Aliases:  l.Aliases,
-				Dir:      l.Dir,
-				Patterns: l.Patterns,
-				Exclude:  l.Exclude,
-				Command:  l.Command,
-			}))
+			providers = append(
+				providers,
+				files.NewProvider(
+					files.Launcher{
+						Name:     l.Name,
+						Aliases:  l.Aliases,
+						Dir:      l.Dir,
+						Patterns: l.Patterns,
+						Exclude:  l.Exclude,
+						Command:  l.Command,
+					},
+				),
+			)
 		}
 	}
 

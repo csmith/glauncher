@@ -78,7 +78,7 @@ func trimPrefix(name string, aliases []string, query string) string {
 
 func makeResult(sp Entry, searchTerm string, priority int) search.Result {
 	return search.Result{
-		Name:        fmt.Sprintf("Search on %s", sp.Name),
+		Name:        "Search on " + sp.Name,
 		Description: searchTerm,
 		Icon:        assets.Search(48),
 		Exec: func(u string) func() error {

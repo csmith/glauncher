@@ -45,8 +45,20 @@ type themeConfig struct {
 	typeface   font.Typeface
 }
 
+type Provider interface {
+	Search(query string) []search.Result
+}
+
+type asyncInitializer interface {
+	Ready() <-chan struct{}
+}
+
+type asyncSearchProvider interface {
+	SetInvalidate(f func())
+}
+
 type App struct {
-	providers    []search.Provider
+	providers    []Provider
 	window       *app.Window
 	editor       widget.Editor
 	list         layout.List
@@ -58,7 +70,7 @@ type App struct {
 	needsRefresh atomic.Bool
 }
 
-func New(themeCfg config.ThemeConfig, providers ...search.Provider) *App {
+func New(themeCfg config.ThemeConfig, providers ...Provider) *App {
 	colors := parseThemeColors(themeCfg)
 	a := &App{
 		providers: providers,
@@ -79,18 +91,20 @@ func (a *App) Run() {
 		)
 
 		for _, p := range a.providers {
-			if ai, ok := p.(search.AsyncInitializer); ok {
+			if ai, ok := p.(asyncInitializer); ok {
 				go func() {
 					<-ai.Ready()
 					a.needsRefresh.Store(true)
 					a.window.Invalidate()
 				}()
 			}
-			if asp, ok := p.(search.AsyncSearchProvider); ok {
-				asp.SetInvalidate(func() {
-					a.needsRefresh.Store(true)
-					a.window.Invalidate()
-				})
+			if asp, ok := p.(asyncSearchProvider); ok {
+				asp.SetInvalidate(
+					func() {
+						a.needsRefresh.Store(true)
+						a.window.Invalidate()
+					},
+				)
 			}
 		}
 
@@ -361,16 +375,24 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 	}.Op()
 	paint.FillShape(gtx.Ops, a.colors.divider, stroke)
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return a.layoutInput(gtx)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return a.layoutDivider(gtx)
-		}),
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return a.layoutResults(gtx)
-		}),
+	return layout.Flex{Axis: layout.Vertical}.Layout(
+		gtx,
+		layout.Rigid(
+			func(gtx layout.Context) layout.Dimensions {
+				return a.layoutInput(gtx)
+			},
+		),
+		layout.Rigid(
+			func(gtx layout.Context) layout.Dimensions {
+				return a.layoutDivider(gtx)
+			},
+		),
+		layout.Flexed(
+			1,
+			func(gtx layout.Context) layout.Dimensions {
+				return a.layoutResults(gtx)
+			},
+		),
 	)
 }
 
@@ -379,17 +401,23 @@ func (a *App) layoutInput(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.Y = h
 	gtx.Constraints.Max.Y = h
 	inset := layout.Inset{Left: unit.Dp(12), Right: unit.Dp(12)}
-	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			ed := material.Editor(a.theme, &a.editor, "Search...")
-			ed.TextSize = unit.Sp(18)
-			ed.Color = a.colors.primary
-			ed.HintColor = a.colors.secondary
-			ed.SelectionColor = a.colors.selection
-			return ed.Layout(gtx)
-		})
-	})
+	return inset.Layout(
+		gtx,
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.Center.Layout(
+				gtx,
+				func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					ed := material.Editor(a.theme, &a.editor, "Search...")
+					ed.TextSize = unit.Sp(18)
+					ed.Color = a.colors.primary
+					ed.HintColor = a.colors.secondary
+					ed.SelectionColor = a.colors.selection
+					return ed.Layout(gtx)
+				},
+			)
+		},
+	)
 }
 
 func (a *App) layoutDivider(gtx layout.Context) layout.Dimensions {
@@ -406,9 +434,13 @@ func (a *App) layoutResults(gtx layout.Context) layout.Dimensions {
 	}
 
 	a.list.Axis = layout.Vertical
-	return a.list.Layout(gtx, len(a.results), func(gtx layout.Context, index int) layout.Dimensions {
-		return a.layoutResult(gtx, index)
-	})
+	return a.list.Layout(
+		gtx,
+		len(a.results),
+		func(gtx layout.Context, index int) layout.Dimensions {
+			return a.layoutResult(gtx, index)
+		},
+	)
 }
 
 func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
@@ -422,23 +454,33 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 	padding := layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4), Left: unit.Dp(12), Right: unit.Dp(12)}
 
 	macro := op.Record(gtx.Ops)
-	dims := padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return a.layoutIcon(gtx, r.Icon)
-			}),
-			layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return a.layoutResultText(gtx, r, selected)
-			}),
-		)
-	})
+	dims := padding.Layout(
+		gtx,
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(
+				gtx,
+				layout.Rigid(
+					func(gtx layout.Context) layout.Dimensions {
+						return a.layoutIcon(gtx, r.Icon)
+					},
+				),
+				layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
+				layout.Flexed(
+					1,
+					func(gtx layout.Context) layout.Dimensions {
+						return a.layoutResultText(gtx, r, selected)
+					},
+				),
+			)
+		},
+	)
 	call := macro.Stop()
 
 	dims.Size.Y = height
 
 	if selected {
-		paint.FillShape(gtx.Ops,
+		paint.FillShape(
+			gtx.Ops,
 			a.colors.selection,
 			clip.Rect{Max: dims.Size}.Op(),
 		)
@@ -471,28 +513,36 @@ func (a *App) layoutResultText(gtx layout.Context, r search.Result, selected boo
 		descColor = color.NRGBA{R: 200, G: 200, B: 220, A: 255}
 	}
 
-	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				label := material.Body1(a.theme, r.Name)
-				label.Color = nameColor
-				label.TextSize = unit.Sp(15)
-				label.MaxLines = 1
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				if r.Description == "" {
-					return layout.Dimensions{}
-				}
-				label := material.Body2(a.theme, r.Description)
-				label.Color = descColor
-				label.TextSize = unit.Sp(12)
-				label.MaxLines = 1
-				return label.Layout(gtx)
-			}),
-		)
-	})
+	return layout.Center.Layout(
+		gtx,
+		func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Flex{Axis: layout.Vertical}.Layout(
+				gtx,
+				layout.Rigid(
+					func(gtx layout.Context) layout.Dimensions {
+						label := material.Body1(a.theme, r.Name)
+						label.Color = nameColor
+						label.TextSize = unit.Sp(15)
+						label.MaxLines = 1
+						return label.Layout(gtx)
+					},
+				),
+				layout.Rigid(
+					func(gtx layout.Context) layout.Dimensions {
+						if r.Description == "" {
+							return layout.Dimensions{}
+						}
+						label := material.Body2(a.theme, r.Description)
+						label.Color = descColor
+						label.TextSize = unit.Sp(12)
+						label.MaxLines = 1
+						return label.Layout(gtx)
+					},
+				),
+			)
+		},
+	)
 }
 
 func scaleImage(src image.Image, size int) image.Image {

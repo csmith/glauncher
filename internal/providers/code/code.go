@@ -1,6 +1,7 @@
 package code
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -62,17 +63,20 @@ func (p *Provider) Search(query string) []search.Result {
 		if !strings.HasPrefix(nameLower, searchLower) && !strings.Contains(nameLower, searchLower) {
 			continue
 		}
-		results = append(results, search.Result{
-			Name:        proj.name,
-			Description: proj.path,
-			Icon:        assets.Code(48),
-			Query:       searchStr,
-			Exec: func(path string, cmd string) func() error {
-				return func() error {
-					return launch(cmd, path)
-				}
-			}(proj.path, p.command),
-		})
+		results = append(
+			results,
+			search.Result{
+				Name:        proj.name,
+				Description: proj.path,
+				Icon:        assets.Code(48),
+				Query:       searchStr,
+				Exec: func(path string, cmd string) func() error {
+					return func() error {
+						return launch(cmd, path)
+					}
+				}(proj.path, p.command),
+			},
+		)
 	}
 
 	return results
@@ -80,27 +84,33 @@ func (p *Provider) Search(query string) []search.Result {
 
 func (p *Provider) scan() {
 	var projects []project
-	filepath.WalkDir(p.dir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		if !d.IsDir() {
-			return nil
-		}
-		if path == p.dir {
-			return nil
-		}
+	filepath.WalkDir(
+		p.dir,
+		func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if !d.IsDir() {
+				return nil
+			}
+			if path == p.dir {
+				return nil
+			}
 
-		if isProjectDir(path) {
-			projects = append(projects, project{
-				name: filepath.Base(path),
-				path: path,
-			})
-			return filepath.SkipDir
-		}
+			if isProjectDir(path) {
+				projects = append(
+					projects,
+					project{
+						name: filepath.Base(path),
+						path: path,
+					},
+				)
+				return filepath.SkipDir
+			}
 
-		return nil
-	})
+			return nil
+		},
+	)
 
 	p.mu.Lock()
 	p.projects = projects
@@ -121,7 +131,7 @@ func launch(command string, path string) error {
 	cmdStr := fmt.Sprintf(command, path)
 	parts := strings.Fields(cmdStr)
 	if len(parts) == 0 {
-		return fmt.Errorf("empty command")
+		return errors.New("empty command")
 	}
 
 	return system.Launch(parts[0], parts[1:]...)

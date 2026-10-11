@@ -29,22 +29,25 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			if tt.input == "10 / 0" {
-				_, err := evaluate(tt.input)
-				if err == nil {
-					t.Error("expected error for division by zero")
+		t.Run(
+			tt.input,
+			func(t *testing.T) {
+				if tt.input == "10 / 0" {
+					_, err := evaluate(tt.input)
+					if err == nil {
+						t.Error("expected error for division by zero")
+					}
+					return
 				}
-				return
-			}
-			got, err := evaluate(tt.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if math.Abs(got-tt.expected) > 1e-9 {
-				t.Errorf("evaluate(%q) = %g, want %g", tt.input, got, tt.expected)
-			}
-		})
+				got, err := evaluate(tt.input)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if math.Abs(got-tt.expected) > 1e-9 {
+					t.Errorf("evaluate(%q) = %g, want %g", tt.input, got, tt.expected)
+				}
+			},
+		)
 	}
 }
 
@@ -61,12 +64,15 @@ func TestEvaluateErrors(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			_, err := evaluate(tt.input)
-			if err == nil {
-				t.Error("expected error")
-			}
-		})
+		t.Run(
+			tt.input,
+			func(t *testing.T) {
+				_, err := evaluate(tt.input)
+				if err == nil {
+					t.Error("expected error")
+				}
+			},
+		)
 	}
 }
 
@@ -88,12 +94,15 @@ func TestLooksLikeExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			got := looksLikeExpression(tt.input)
-			if got != tt.want {
-				t.Errorf("looksLikeExpression(%q) = %v, want %v", tt.input, got, tt.want)
-			}
-		})
+		t.Run(
+			tt.input,
+			func(t *testing.T) {
+				got := looksLikeExpression(tt.input)
+				if got != tt.want {
+					t.Errorf("looksLikeExpression(%q) = %v, want %v", tt.input, got, tt.want)
+				}
+			},
+		)
 	}
 }
 
@@ -110,11 +119,14 @@ func TestFormatResult(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.expected, func(t *testing.T) {
-			got := formatResult(tt.input)
-			if got != tt.expected {
-				t.Errorf("formatResult(%g) = %q, want %q", tt.input, got, tt.expected)
-			}
-		})
+		t.Run(
+			tt.expected,
+			func(t *testing.T) {
+				got := formatResult(tt.input)
+				if got != tt.expected {
+					t.Errorf("formatResult(%g) = %q, want %q", tt.input, got, tt.expected)
+				}
+			},
+		)
 	}
 }

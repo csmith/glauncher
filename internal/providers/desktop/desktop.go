@@ -2,9 +2,11 @@ package desktop
 
 import (
 	"bufio"
-	"fmt"
+	"errors"
 	"image"
 	"image/png"
+	"io"
+	"iter"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,22 +66,31 @@ func (p *Provider) Search(query string) []search.Result {
 
 	var results []search.Result
 	for _, e := range p.entries {
-		if !strings.HasPrefix(e.nameLower, q) && !strings.Contains(e.nameLower, q) && !strings.Contains(e.commentLower, q) && !strings.Contains(e.keywordsLower, q) {
+		if !e.matches(q) {
 			continue
 		}
-		results = append(results, search.Result{
-			Name:        e.name,
-			Description: e.comment,
-			Icon:        p.lookupIcon(e.iconName),
-			Exec: func(exec string) func() error {
-				return func() error {
-					return launch(exec)
-				}
-			}(e.exec),
-		})
+		results = append(
+			results,
+			search.Result{
+				Name:        e.name,
+				Description: e.comment,
+				Icon:        p.lookupIcon(e.iconName),
+				Exec: func(exec string) func() error {
+					return func() error {
+						return launch(exec)
+					}
+				}(e.exec),
+			},
+		)
 	}
 
 	return results
+}
+
+func (e *entry) matches(q string) bool {
+	return strings.Contains(e.nameLower, q) ||
+		strings.Contains(e.commentLower, q) ||
+		strings.Contains(e.keywordsLower, q)
 }
 
 func (p *Provider) load() {
@@ -98,28 +109,31 @@ func (p *Provider) load() {
 }
 
 func scanDirectory(dir string, seen map[string]bool, entries *[]entry) {
-	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return nil
-		}
-		if !strings.HasSuffix(path, ".desktop") {
-			return nil
-		}
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return nil
-		}
-		if seen[rel] {
-			return nil
-		}
-		seen[rel] = true
+	filepath.WalkDir(
+		dir,
+		func(path string, d os.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(path, ".desktop") {
+				return nil
+			}
+			rel, err := filepath.Rel(dir, path)
+			if err != nil {
+				return nil
+			}
+			if seen[rel] {
+				return nil
+			}
+			seen[rel] = true
 
-		e := parseDesktopFile(path)
-		if e != nil {
-			*entries = append(*entries, *e)
-		}
-		return nil
-	})
+			e := parseDesktopFile(path)
+			if e != nil {
+				*entries = append(*entries, *e)
+			}
+			return nil
+		},
+	)
 }
 
 func xdgDataDirs() []string {
@@ -151,36 +165,10 @@ func parseDesktopFile(path string) *entry {
 	defer f.Close()
 
 	e := &entry{}
-	inDesktopEntry := false
 	isApplication := false
 	var keywords string
 
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		if line == "[Desktop Entry]" {
-			inDesktopEntry = true
-			continue
-		}
-		if strings.HasPrefix(line, "[") {
-			inDesktopEntry = false
-			continue
-		}
-		if !inDesktopEntry {
-			continue
-		}
-
-		key, value, ok := strings.Cut(line, "=")
-		if !ok {
-			continue
-		}
-		key = strings.TrimSpace(key)
-		value = strings.TrimSpace(value)
-
+	for key, value := range desktopEntryFields(f) {
 		switch key {
 		case "Type":
 			isApplication = value == "Application"
@@ -227,6 +215,33 @@ func parseDesktopFile(path string) *entry {
 	return e
 }
 
+func desktopEntryFields(r io.Reader) iter.Seq2[string, string] {
+	return func(yield func(string, string) bool) {
+		inDesktopEntry := false
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			if strings.HasPrefix(line, "[") {
+				inDesktopEntry = line == "[Desktop Entry]"
+				continue
+			}
+			if !inDesktopEntry {
+				continue
+			}
+			key, value, ok := strings.Cut(line, "=")
+			if !ok {
+				continue
+			}
+			if !yield(strings.TrimSpace(key), strings.TrimSpace(value)) {
+				return
+			}
+		}
+	}
+}
+
 func (p *Provider) lookupIcon(name string) image.Image {
 	if name == "" {
 		return assets.Placeholder(48)
@@ -249,65 +264,61 @@ func (p *Provider) findIconFile(name string) image.Image {
 	extensions := []string{".png", ".svg"}
 	sizeDirs := []string{"48x48", "64x64", "128x128", "scalable", ""}
 
-	searchDirs := iconSearchDirs()
-
-	for _, dir := range searchDirs {
+	for _, dir := range iconSearchDirs() {
 		for _, sizeDir := range sizeDirs {
-			var searchPath string
+			searchPath := dir
 			if sizeDir != "" {
 				searchPath = filepath.Join(dir, sizeDir, "apps")
-			} else {
-				searchPath = dir
 			}
 
 			for _, ext := range extensions {
-				candidate := filepath.Join(searchPath, name+ext)
-				if f, err := os.Open(candidate); err == nil {
-					var img image.Image
-					if ext == ".png" {
-						img, err = png.Decode(f)
-					} else if ext == ".svg" {
-						img, err = decodeSVG(f, 48)
-					}
-					f.Close()
-					if img != nil && err == nil {
-						return resizeIcon(img, 48)
-					}
+				if img := loadIcon(filepath.Join(searchPath, name+ext)); img != nil {
+					return img
 				}
 			}
 		}
 	}
 
 	if filepath.IsAbs(name) {
-		if f, err := os.Open(name); err == nil {
-			var img image.Image
-			lower := strings.ToLower(name)
-			if strings.HasSuffix(lower, ".png") {
-				img, err = png.Decode(f)
-			} else if strings.HasSuffix(lower, ".svg") {
-				img, err = decodeSVG(f, 48)
-			}
-			f.Close()
-			if img != nil && err == nil {
-				return resizeIcon(img, 48)
-			}
-		}
+		return loadIcon(name)
 	}
 
 	return nil
+}
+
+func loadIcon(path string) image.Image {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	var img image.Image
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".png":
+		img, err = png.Decode(f)
+	case ".svg":
+		img, err = decodeSVG(f, 48)
+	}
+	if img == nil || err != nil {
+		return nil
+	}
+	return resizeIcon(img, 48)
 }
 
 func iconSearchDirs() []string {
 	var dirs []string
 
 	if home, err := os.UserHomeDir(); err == nil {
-		dirs = append(dirs,
+		dirs = append(
+			dirs,
 			filepath.Join(home, ".local", "share", "icons", "hicolor"),
 			filepath.Join(home, ".icons"),
 		)
 	}
 
-	dirs = append(dirs,
+	dirs = append(
+		dirs,
 		"/usr/share/icons/hicolor",
 		"/usr/share/icons",
 		"/usr/share/pixmaps",
@@ -353,7 +364,7 @@ func launch(execLine string) error {
 	cmd := cleanExec(execLine)
 	parts := splitCommand(cmd)
 	if len(parts) == 0 {
-		return fmt.Errorf("empty command")
+		return errors.New("empty command")
 	}
 
 	return system.Launch(parts[0], parts[1:]...)

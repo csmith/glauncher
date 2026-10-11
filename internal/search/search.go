@@ -15,48 +15,38 @@ type Result struct {
 	Priority    int
 }
 
-type Provider interface {
-	Search(query string) []Result
-}
-
-type AsyncInitializer interface {
-	Ready() <-chan struct{}
-}
-
-type AsyncSearchProvider interface {
-	Provider
-	SetInvalidate(f func())
-}
-
 func SortResults(results []Result, query string) {
-	sort.Slice(results, func(i, j int) bool {
-		pi := results[i].Priority
-		pj := results[j].Priority
-		if pi != pj {
-			return pi > pj
-		}
+	sort.Slice(
+		results,
+		func(i, j int) bool {
+			pi := results[i].Priority
+			pj := results[j].Priority
+			if pi != pj {
+				return pi > pj
+			}
 
-		qi := results[i].Query
-		if qi == "" {
-			qi = query
-		}
-		qj := results[j].Query
-		if qj == "" {
-			qj = query
-		}
+			qi := results[i].Query
+			if qi == "" {
+				qi = query
+			}
+			qj := results[j].Query
+			if qj == "" {
+				qj = query
+			}
 
-		si := score(strings.ToLower(results[i].Name), strings.ToLower(results[i].Description), strings.ToLower(qi))
-		sj := score(strings.ToLower(results[j].Name), strings.ToLower(results[j].Description), strings.ToLower(qj))
-		if si != sj {
-			return si > sj
-		}
-		di := LevenshteinDistance(strings.ToLower(results[i].Name), strings.ToLower(qi))
-		dj := LevenshteinDistance(strings.ToLower(results[j].Name), strings.ToLower(qj))
-		if di != dj {
-			return di < dj
-		}
-		return strings.ToLower(results[i].Name) < strings.ToLower(results[j].Name)
-	})
+			si := score(strings.ToLower(results[i].Name), strings.ToLower(results[i].Description), strings.ToLower(qi))
+			sj := score(strings.ToLower(results[j].Name), strings.ToLower(results[j].Description), strings.ToLower(qj))
+			if si != sj {
+				return si > sj
+			}
+			di := LevenshteinDistance(strings.ToLower(results[i].Name), strings.ToLower(qi))
+			dj := LevenshteinDistance(strings.ToLower(results[j].Name), strings.ToLower(qj))
+			if di != dj {
+				return di < dj
+			}
+			return strings.ToLower(results[i].Name) < strings.ToLower(results[j].Name)
+		},
+	)
 }
 
 func score(nameLower, descLower, q string) int {
