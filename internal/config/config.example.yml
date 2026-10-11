@@ -70,6 +70,23 @@ snippets:
       aliases: ["tf"] 
       content: "(╯°□°)╯︵ ┻━┻"
 
+# Provider: file launchers
+# Each launcher finds files matching its patterns under a directory, and
+# opens the selected one with a command (`%s` is replaced with the file's
+# path, or it's appended if there's no `%s`). Type the launcher's name or
+# an alias to list its files; any further words filter them by path.
+# Hidden directories are skipped, as are any named in `exclude`.
+# e.g. typing "notes todo" will suggest "/home/user/notes/work/todo.md".
+files:
+  enabled: false
+  launchers:
+    - name: notes
+      aliases: ["n"]
+      dir: "~/notes"
+      patterns: ["*.md", "*.txt"]
+      exclude: ["node_modules"]
+      command: "zeditor %s"
+
 # You can customise the appearance of glauncher by defining a theme.
 # Colours should be in hexidecimal, starting with a '#' and can
 # contain an alpha channel.

@@ -58,6 +58,7 @@ func ArchAlt(size int) image.Image     { return load("arch-alt", size) }
 func Calculator(size int) image.Image  { return load("calculator", size) }
 func Code(size int) image.Image        { return load("code", size) }
 func Error(size int) image.Image       { return load("error", size) }
+func File(size int) image.Image        { return load("file", size) }
 func Folder(size int) image.Image      { return load("folder", size) }
 func Loading(size int) image.Image     { return load("loading", size) }
 func Placeholder(size int) image.Image { return load("placeholder", size) }

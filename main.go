@@ -8,6 +8,7 @@ import (
 	"chameth.com/glauncher/internal/providers/calc"
 	"chameth.com/glauncher/internal/providers/code"
 	"chameth.com/glauncher/internal/providers/desktop"
+	"chameth.com/glauncher/internal/providers/files"
 	"chameth.com/glauncher/internal/providers/folders"
 	"chameth.com/glauncher/internal/providers/searchweb"
 	"chameth.com/glauncher/internal/providers/snippets"
@@ -70,6 +71,19 @@ func main() {
 			})
 		}
 		providers = append(providers, snippets.NewProvider(items))
+	}
+
+	if cfg.Files.Enabled {
+		for _, l := range cfg.Files.Launchers {
+			providers = append(providers, files.NewProvider(files.Launcher{
+				Name:     l.Name,
+				Aliases:  l.Aliases,
+				Dir:      l.Dir,
+				Patterns: l.Patterns,
+				Exclude:  l.Exclude,
+				Command:  l.Command,
+			}))
+		}
 	}
 
 	app := ui.New(cfg.Theme, providers...)

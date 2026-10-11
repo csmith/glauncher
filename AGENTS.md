@@ -13,7 +13,7 @@ Module: `chameth.com/glauncher` | Go 1.26.2 | License: MIT
 
 ## Verification
 
-Always run `make verify` after making changes. There are no tests.
+Always run `make verify` after making changes, and `go test ./...`.
 
 CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go build` and `go test` on every PR.
 
@@ -27,6 +27,7 @@ CI uses Forgejo Actions with reusable workflows (`meta/workflows`) that run `go 
 - `internal/providers/folders/` — implements `search.Provider`: opens directories by path
 - `internal/providers/arch/` — implements `search.Provider`: searches Arch Linux and AUR packages
 - `internal/providers/calc/` — implements `search.Provider`: evaluates math expressions
+- `internal/providers/files/` — implements `search.Provider`: one instance per configured launcher; lists files matching glob patterns under a directory and opens them with a command
 - `internal/providers/searchweb/` — implements `search.Provider`: opens web searches
 - `internal/ui/` — Gio UI window: search input, arrow-key navigation, result list with icons
 
@@ -40,5 +41,5 @@ Adding a new search source means implementing `search.Provider`, adding a config
 
 - Gio UI (`gioui.org`) is the GUI toolkit — requires CGO and platform graphics libraries (Wayland/X11 headers) to build
 - Config uses `github.com/csmith/config` for YAML loading from XDG config dir
-- No tests yet; when adding them, follow standard Go patterns (`_test.go` files in each package)
+- Tests use `github.com/stretchr/testify` for assertions, in `_test.go` files alongside the code they cover
 - CI is on Forgejo (not GitHub), defined in `.forgejo/workflows/`

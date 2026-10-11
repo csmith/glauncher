@@ -22,6 +22,7 @@ type Config struct {
 	Calc      CalcConfig      `yaml:"calc"`
 	SearchWeb SearchWebConfig `yaml:"search"`
 	Snippets  SnippetsConfig  `yaml:"snippets"`
+	Files     FilesConfig     `yaml:"files"`
 }
 
 type ThemeConfig struct {
@@ -76,6 +77,20 @@ type SnippetEntry struct {
 	Name    string   `yaml:"name"`
 	Aliases []string `yaml:"aliases"`
 	Content string   `yaml:"content"`
+}
+
+type FilesConfig struct {
+	Enabled   bool                 `yaml:"enabled"`
+	Launchers []FilesLauncherEntry `yaml:"launchers"`
+}
+
+type FilesLauncherEntry struct {
+	Name     string   `yaml:"name"`
+	Aliases  []string `yaml:"aliases"`
+	Dir      string   `yaml:"dir"`
+	Patterns []string `yaml:"patterns"`
+	Exclude  []string `yaml:"exclude"`
+	Command  string   `yaml:"command"`
 }
 
 func Load() (*Config, error) {
