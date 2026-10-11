@@ -50,8 +50,8 @@ directly with your IDE of choice. Requires the prefix "code".
 ### File launchers
 
 Requires configuring. See the [example config](./internal/config/config.example.yml).
-Each launcher lists files matching patterns (e.g. `*.md`) under a
-directory, and opens the selected one with a command. Type the
+Each launcher lists files matching glob patterns (e.g. `*.md` or
+`**/specs/*.md`) under a directory, and opens the selected one with a command. Type the
 launcher's name to list its files, and add words to filter them.
 
 ### Arch linux packages

@@ -75,6 +75,9 @@ snippets:
 # opens the selected one with a command (`%s` is replaced with the file's
 # path, or it's appended if there's no `%s`). Type the launcher's name or
 # an alias to list its files; any further words filter them by path.
+# Patterns ignore case. One without a `/` matches file names at any depth;
+# one with a `/` matches the path under the directory, and can use `**`
+# for any number of directories (e.g. `**/specs/*.md`).
 # Hidden directories are skipped, as are any named in `exclude`.
 # e.g. typing "notes todo" will suggest "/home/user/notes/work/todo.md".
 files:
@@ -83,7 +86,7 @@ files:
     - name: notes
       aliases: ["n"]
       dir: "~/notes"
-      patterns: ["*.md", "*.txt"]
+      patterns: ["*.md", "*.txt", "**/specs/*.yml"]
       exclude: ["node_modules"]
       command: "zeditor %s"
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
 	"chameth.com/glauncher/internal/system"
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 // Launcher describes a set of files, and a command to open one of them with.
@@ -179,19 +181,37 @@ func scan(dir string, patterns, exclude []string) []string {
 				}
 				return nil
 			}
-			if slices.ContainsFunc(
-				patterns,
-				func(p string) bool {
-					ok, _ := filepath.Match(p, name)
-					return ok
-				},
-			) {
+			rel, err := filepath.Rel(dir, path)
+			if err != nil {
+				return nil
+			}
+			if matchesPattern(patterns, filepath.ToSlash(rel)) {
 				files = append(files, path)
 			}
 			return nil
 		},
 	)
 	return files
+}
+
+// matchesPattern reports whether the slash-separated path rel matches any of
+// the patterns, ignoring case. Patterns without a slash match the file name
+// alone, so "*.md" finds files at any depth.
+func matchesPattern(patterns []string, rel string) bool {
+	rel = strings.ToLower(rel)
+	name := path.Base(rel)
+	return slices.ContainsFunc(
+		patterns,
+		func(p string) bool {
+			p = strings.ToLower(p)
+			target := rel
+			if !strings.Contains(p, "/") {
+				target = name
+			}
+			ok, _ := doublestar.Match(p, target)
+			return ok
+		},
+	)
 }
 
 func expandHome(path string) string {

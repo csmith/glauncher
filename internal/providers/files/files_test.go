@@ -79,6 +79,33 @@ func TestScan(t *testing.T) {
 	)
 }
 
+func TestMatchesPattern(t *testing.T) {
+	tests := []struct {
+		pattern string
+		rel     string
+		want    bool
+	}{
+		{"*.md", "a.md", true},
+		{"*.md", "sub/deep/a.md", true},
+		{"*.md", "A.MD", true},
+		{"*.md", "a.txt", false},
+		{"Specs/*.md", "specs/a.md", true},
+		{"specs/*.md", "proj/specs/a.md", false},
+		{"*/specs/*.md", "proj/specs/a.md", true},
+		{"**/specs/*.md", "a/b/specs/c.md", true},
+		{"**/specs/*.md", "specs/c.md", true},
+		{"[*.md", "a.md", false},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.pattern+" "+tt.rel,
+			func(t *testing.T) {
+				assert.Equal(t, tt.want, matchesPattern([]string{tt.pattern}, tt.rel))
+			},
+		)
+	}
+}
+
 func TestSearchFiltersScannedFiles(t *testing.T) {
 	dir := t.TempDir()
 	for _, f := range []string{"proj/specs/029-spec.md", "proj/specs/030-spec.md", "other/029.md"} {
