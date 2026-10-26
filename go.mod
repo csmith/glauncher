@@ -3,7 +3,7 @@ module chameth.com/glauncher
 go 1.26.2
 
 require (
-	gioui.org v0.10.2
+	gioui.org v0.10.3
 	github.com/bmatcuk/doublestar/v4 v4.10.2
 	github.com/csmith/config v1.4.0
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
@@ -14,8 +14,9 @@ require (
 
 require (
 	gioui.org/shader v1.0.9 // indirect
-	github.com/go-text/typesetting v0.3.4 // indirect
+	github.com/go-text/typesetting v0.3.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/net v0.53.0 // indirect
