@@ -29,11 +29,9 @@ func (p *Provider) Search(query string) []search.Result {
 		return nil
 	}
 
-	display := strings.TrimSpace(query) + " = " + formatted
-
 	return []search.Result{{
 		Name:        formatted,
-		Description: display,
+		Description: strings.TrimSpace(query) + " = " + formatted,
 		Icon:        assets.Calculator(48),
 		Query:       query,
 		Exec: func(text string) func() error {

@@ -128,8 +128,7 @@ func isProjectDir(path string) bool {
 }
 
 func launch(command string, path string) error {
-	cmdStr := fmt.Sprintf(command, path)
-	parts := strings.Fields(cmdStr)
+	parts := strings.Fields(fmt.Sprintf(command, path))
 	if len(parts) == 0 {
 		return errors.New("empty command")
 	}

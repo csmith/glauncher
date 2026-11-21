@@ -231,8 +231,7 @@ func (a *App) pageUp() {
 		a.scrollToSelected()
 		return
 	}
-	target := max(firstVisible-pos.Count+1, 0)
-	a.selected = target
+	a.selected = max(firstVisible-pos.Count+1, 0)
 	pos.First = a.selected
 	pos.Offset = 0
 }
@@ -295,11 +294,14 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 	radius := gtx.Dp(unit.Dp(4))
 	r := clip.UniformRRect(image.Rect(0, 0, size.X, size.Y), radius)
 	borderWidth := float32(2 * gtx.Dp(unit.Dp(1)))
-	stroke := clip.Stroke{
-		Path:  r.Path(gtx.Ops),
-		Width: borderWidth,
-	}.Op()
-	paint.FillShape(gtx.Ops, a.colors.divider, stroke)
+	paint.FillShape(
+		gtx.Ops,
+		a.colors.divider,
+		clip.Stroke{
+			Path:  r.Path(gtx.Ops),
+			Width: borderWidth,
+		}.Op(),
+	)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(
 		gtx,
@@ -425,8 +427,7 @@ func (a *App) layoutIcon(gtx layout.Context, img image.Image) layout.Dimensions 
 	gtx.Constraints = layout.Exact(image.Pt(size, size))
 
 	img = scaleImage(img, size)
-	imgOp := paint.NewImageOp(img)
-	imgOp.Add(gtx.Ops)
+	paint.NewImageOp(img).Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
 	return layout.Dimensions{Size: image.Pt(size, size)}
 }

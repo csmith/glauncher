@@ -99,8 +99,7 @@ func (p *Provider) load() {
 	var entries []entry
 
 	for _, dir := range dirs {
-		appDir := filepath.Join(dir, "applications")
-		scanDirectory(appDir, seen, &entries)
+		scanDirectory(filepath.Join(dir, "applications"), seen, &entries)
 	}
 
 	p.mu.Lock()
@@ -336,9 +335,10 @@ func decodeSVG(f *os.File, size int) (image.Image, error) {
 	}
 	icon.SetTarget(0, 0, float64(size), float64(size))
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	scanner := rasterx.NewScannerGV(size, size, img, img.Bounds())
-	dasher := rasterx.NewDasher(size, size, scanner)
-	icon.Draw(dasher, 1)
+	icon.Draw(
+		rasterx.NewDasher(size, size, rasterx.NewScannerGV(size, size, img, img.Bounds())),
+		1,
+	)
 	return img, nil
 }
 
@@ -352,17 +352,18 @@ func resizeIcon(img image.Image, size int) image.Image {
 	scaleY := float64(b.Dy()) / float64(size)
 	for y := range size {
 		for x := range size {
-			sx := int(float64(x) * scaleX)
-			sy := int(float64(y) * scaleY)
-			dst.Set(x, y, img.At(b.Min.X+sx, b.Min.Y+sy))
+			dst.Set(
+				x,
+				y,
+				img.At(b.Min.X+int(float64(x)*scaleX), b.Min.Y+int(float64(y)*scaleY)),
+			)
 		}
 	}
 	return dst
 }
 
 func launch(execLine string) error {
-	cmd := cleanExec(execLine)
-	parts := splitCommand(cmd)
+	parts := splitCommand(cleanExec(execLine))
 	if len(parts) == 0 {
 		return errors.New("empty command")
 	}

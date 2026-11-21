@@ -96,6 +96,5 @@ func main() {
 		}
 	}
 
-	app := ui.New(cfg.Theme, providers...)
-	app.Run()
+	ui.New(cfg.Theme, providers...).Run()
 }

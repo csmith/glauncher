@@ -265,6 +265,5 @@ func formatResult(val float64) string {
 	if val == math.Trunc(val) && !math.IsInf(val, 0) && !math.IsNaN(val) {
 		return fmt.Sprintf("%.0f", val)
 	}
-	s := fmt.Sprintf("%g", val)
-	return s
+	return fmt.Sprintf("%g", val)
 }
