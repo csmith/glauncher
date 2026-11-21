@@ -10,7 +10,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	"chameth.com/x/desktop"
 )
 
 type Provider struct {
@@ -133,5 +133,5 @@ func launch(command string, path string) error {
 		return errors.New("empty command")
 	}
 
-	return system.Launch(parts[0], parts[1:]...)
+	return desktop.Launch(parts[0], parts[1:]...)
 }

@@ -14,7 +14,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	xdesktop "chameth.com/x/desktop"
 
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
@@ -368,7 +368,7 @@ func launch(execLine string) error {
 		return errors.New("empty command")
 	}
 
-	return system.Launch(parts[0], parts[1:]...)
+	return xdesktop.Launch(parts[0], parts[1:]...)
 }
 
 func cleanExec(s string) string {

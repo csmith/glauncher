@@ -13,7 +13,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	"chameth.com/x/desktop"
 )
 
 const debounceDelay = time.Second
@@ -109,7 +109,7 @@ func (p *Provider) doSearch() {
 				Query:       searchTerm,
 				Exec: func(u string) func() error {
 					return func() error {
-						return openURL(u)
+						return desktop.Open(u)
 					}
 				}(url),
 			},
@@ -126,7 +126,7 @@ func (p *Provider) doSearch() {
 				Query:       searchTerm,
 				Exec: func(u string) func() error {
 					return func() error {
-						return openURL(u)
+						return desktop.Open(u)
 					}
 				}(url),
 			},
@@ -189,10 +189,6 @@ type officialResult struct {
 type aurResult struct {
 	Name        string `json:"Name"`
 	Description string `json:"Description"`
-}
-
-func openURL(url string) error {
-	return system.OpenURL(url)
 }
 
 func statusResult(text string, icon image.Image) search.Result {

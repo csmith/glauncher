@@ -7,7 +7,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	"chameth.com/x/desktop"
 )
 
 type Entry struct {
@@ -83,13 +83,9 @@ func makeResult(sp Entry, searchTerm string, priority int) search.Result {
 		Icon:        assets.Search(48),
 		Exec: func(u string) func() error {
 			return func() error {
-				return openURL(u)
+				return desktop.Open(u)
 			}
 		}(fmt.Sprintf(sp.URL, url.QueryEscape(searchTerm))),
 		Priority: priority,
 	}
-}
-
-func openURL(u string) error {
-	return system.OpenURL(u)
 }

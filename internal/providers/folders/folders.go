@@ -6,7 +6,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	"chameth.com/x/desktop"
 )
 
 type Provider struct{}
@@ -46,7 +46,7 @@ func (p *Provider) Search(query string) []search.Result {
 				Query:       expanded,
 				Exec: func(path string) func() error {
 					return func() error {
-						return launch(path)
+						return desktop.Open(path)
 					}
 				}(strings.TrimRight(dir, "/")),
 			},
@@ -80,7 +80,7 @@ func (p *Provider) Search(query string) []search.Result {
 				Query:       expanded,
 				Exec: func(path string) func() error {
 					return func() error {
-						return launch(path)
+						return desktop.Open(path)
 					}
 				}(fullPath),
 			},
@@ -107,8 +107,4 @@ func splitPath(query string) (dir string, prefix string) {
 		return "", query
 	}
 	return query[:idx+1], query[idx+1:]
-}
-
-func launch(path string) error {
-	return system.OpenURL(path)
 }

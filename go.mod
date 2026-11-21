@@ -3,7 +3,7 @@ module chameth.com/glauncher
 go 1.27.4
 
 require (
-	chameth.com/x v0.0.1
+	chameth.com/x v0.0.2
 	gioui.org v0.10.3
 	github.com/bmatcuk/doublestar/v4 v4.10.3
 	github.com/csmith/config v1.4.0

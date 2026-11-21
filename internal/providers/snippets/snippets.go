@@ -5,7 +5,7 @@ import (
 
 	"chameth.com/glauncher/internal/assets"
 	"chameth.com/glauncher/internal/search"
-	"chameth.com/glauncher/internal/system"
+	"chameth.com/x/desktop"
 )
 
 type Entry struct {
@@ -41,7 +41,7 @@ func (p *Provider) Search(query string) []search.Result {
 					Query:       query,
 					Exec: func(content string) func() error {
 						return func() error {
-							return system.CopyToClipboard(content)
+							return desktop.Copy(content)
 						}
 					}(s.Content),
 				},
