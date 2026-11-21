@@ -1,8 +1,9 @@
 module chameth.com/glauncher
 
-go 1.26.2
+go 1.27.4
 
 require (
+	chameth.com/x v0.0.1
 	gioui.org v0.10.3
 	github.com/bmatcuk/doublestar/v4 v4.10.3
 	github.com/csmith/config v1.4.0
@@ -19,7 +20,7 @@ require (
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )

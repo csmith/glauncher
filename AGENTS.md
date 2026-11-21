@@ -4,7 +4,7 @@
 
 Gio UI-based Linux application launcher. Reads `.desktop` files from XDG data directories, provides a search-driven GUI to find and launch apps, with additional providers for code projects and folder navigation.
 
-Module: `chameth.com/glauncher` | Go 1.26.2 | License: MIT
+Module: `chameth.com/glauncher` | Go 1.27.4 | License: MIT
 
 ## Makefile targets
 

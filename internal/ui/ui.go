@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"unicode"
 
+	xgio "chameth.com/x/ui/gio"
 	"gioui.org/app"
 	"gioui.org/font"
 	"gioui.org/io/key"
@@ -146,6 +146,7 @@ func (a *App) loop() error {
 func (a *App) frame(gtx layout.Context) {
 	gtx.Execute(key.FocusCmd{Tag: &a.editor})
 
+	xgio.HandleWordEditing(gtx, &a.editor)
 	a.handleNavKeys(gtx)
 	a.handleEditorEvents(gtx)
 	a.updateSearch()
@@ -162,9 +163,6 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 			key.Filter{Focus: &a.editor, Name: key.NameReturn},
 			key.Filter{Focus: &a.editor, Name: key.NameEnter},
 			key.Filter{Focus: &a.editor, Name: key.NameEscape},
-			key.Filter{Focus: &a.editor, Name: key.NameDeleteBackward, Required: key.ModCtrl},
-			key.Filter{Focus: &a.editor, Name: key.NameLeftArrow, Required: key.ModCtrl},
-			key.Filter{Focus: &a.editor, Name: key.NameRightArrow, Required: key.ModCtrl},
 		)
 		if !ok {
 			break
@@ -201,12 +199,6 @@ func (a *App) handleNavKeys(gtx layout.Context) {
 				}()
 				a.window.Perform(giosys.ActionClose)
 			}
-		case key.NameDeleteBackward:
-			a.deleteWordBack()
-		case key.NameLeftArrow:
-			a.moveWordLeft()
-		case key.NameRightArrow:
-			a.moveWordRight()
 		}
 	}
 }
@@ -294,72 +286,6 @@ func (a *App) updateSearch() {
 		a.results = append(a.results, p.Search(q)...)
 	}
 	search.SortResults(a.results, q)
-}
-
-func (a *App) deleteWordBack() {
-	selStart, selEnd := a.editor.Selection()
-	if selStart > selEnd {
-		selStart, selEnd = selEnd, selStart
-	}
-	text := a.editor.Text()
-	runes := []rune(text)
-
-	if selStart != selEnd {
-		newRunes := make([]rune, 0, len(runes)-(selEnd-selStart))
-		newRunes = append(newRunes, runes[:selStart]...)
-		newRunes = append(newRunes, runes[selEnd:]...)
-		a.editor.SetText(string(newRunes))
-		a.editor.SetCaret(selStart, selStart)
-		return
-	}
-
-	pos := selStart
-	for pos > 0 && unicode.IsSpace(runes[pos-1]) {
-		pos--
-	}
-	for pos > 0 && !unicode.IsSpace(runes[pos-1]) {
-		pos--
-	}
-
-	if pos < selStart {
-		newRunes := make([]rune, 0, len(runes)-(selStart-pos))
-		newRunes = append(newRunes, runes[:pos]...)
-		newRunes = append(newRunes, runes[selStart:]...)
-		a.editor.SetText(string(newRunes))
-		a.editor.SetCaret(pos, pos)
-	}
-}
-
-func (a *App) moveWordLeft() {
-	selStart, selEnd := a.editor.Selection()
-	pos := min(selStart, selEnd)
-	text := a.editor.Text()
-	runes := []rune(text)
-
-	for pos > 0 && unicode.IsSpace(runes[pos-1]) {
-		pos--
-	}
-	for pos > 0 && !unicode.IsSpace(runes[pos-1]) {
-		pos--
-	}
-
-	a.editor.SetCaret(pos, pos)
-}
-
-func (a *App) moveWordRight() {
-	selStart, selEnd := a.editor.Selection()
-	pos := max(selStart, selEnd)
-	text := a.editor.Text()
-	runes := []rune(text)
-
-	for pos < len(runes) && unicode.IsSpace(runes[pos]) {
-		pos++
-	}
-	for pos < len(runes) && !unicode.IsSpace(runes[pos]) {
-		pos++
-	}
-
-	a.editor.SetCaret(pos, pos)
 }
 
 func (a *App) layout(gtx layout.Context) layout.Dimensions {
