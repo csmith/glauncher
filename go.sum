@@ -1,5 +1,3 @@
-chameth.com/x v0.0.1 h1:h6XkQ9uyOkiEXiNbEb/l0fLDctM46rZw1sgNHs8PRfY=
-chameth.com/x v0.0.1/go.mod h1:L205DjGmjy5l12zEnb0JNHPGMDS+YOfxKzD6tU8tigI=
 chameth.com/x v0.0.2 h1:EO+uaBZvIx2Pjc7TJMj1COxum1q7NyMn4JlVzOQA8TE=
 chameth.com/x v0.0.2/go.mod h1:L205DjGmjy5l12zEnb0JNHPGMDS+YOfxKzD6tU8tigI=
 eliasnaur.com/font v0.0.0-20230308162249-dd43949cb42d h1:ARo7NCVvN2NdhLlJE9xAbKweuI9L6UgfTbYb0YwPacY=
@@ -11,8 +9,8 @@ gioui.org/shader v1.0.9 h1:XxnqIfmClWpN49kizxH2W0JcCFrrEP4q3jZmNYaltbs=
 gioui.org/shader v1.0.9/go.mod h1:mWdiME581d/kV7/iEhLmUgUK5iZ09XR5XpduXzbePVM=
 github.com/bmatcuk/doublestar/v4 v4.10.3 h1:1UIv1+fqH3++ViVkpnaPTB+Pi1UHycnPFAq14zgK+gI=
 github.com/bmatcuk/doublestar/v4 v4.10.3/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
-github.com/csmith/config v1.4.0 h1:gBZMywF67G/XKBkW8uGYY6RkbmamJTvwSYEUHcIhUj0=
-github.com/csmith/config v1.4.0/go.mod h1:Rl1hhfU4h/lMybJ/tpOnUfjy4x5tWgE9LtB0Uq5e9XE=
+github.com/csmith/config v1.5.0 h1:aJyWR78VOVKGCepOE90B4y0q9M7HKRDkG5RDCwMxEGA=
+github.com/csmith/config v1.5.0/go.mod h1:qqaZd+PVQCGnBjaSgsIOLLA6gNAscv7tokMHkej/6o8=
 github.com/go-text/typesetting v0.3.5 h1:XZPUooClHY0Vf/rFyUyuPRNEkawARaFzLMQcXLSEyPk=
 github.com/go-text/typesetting v0.3.5/go.mod h1:XZO1hD+nQVyvVa5IicQk7FsCa4PFQaJ2soWAP1f//68=
 github.com/go-text/typesetting-utils v0.0.0-20260419141703-4ffe8874dabc h1:8FGo2It5K75XkavhTiCKExUfVaVDS1feBnLCru5qeoY=
