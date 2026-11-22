@@ -368,7 +368,7 @@ func launch(execLine string) error {
 		return errors.New("empty command")
 	}
 
-	return xdesktop.Launch(parts[0], parts[1:]...)
+	return xdesktop.Launch(parts[0], parts[1:])
 }
 
 func cleanExec(s string) string {
