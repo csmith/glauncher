@@ -5,7 +5,7 @@ go 1.27.4
 require (
 	chameth.com/x v0.0.2
 	gioui.org v0.10.3
-	github.com/bmatcuk/doublestar/v4 v4.10.3
+	github.com/bmatcuk/doublestar/v4 v4.10.4
 	github.com/csmith/config v1.5.0
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
