@@ -133,5 +133,5 @@ func launch(command string, path string) error {
 		return errors.New("empty command")
 	}
 
-	return desktop.Launch(parts[0], parts[1:]...)
+	return desktop.Launch(parts[0], parts[1:])
 }

@@ -145,7 +145,7 @@ func launch(cmd, path string) error {
 	if len(parts) == 0 {
 		return errors.New("no command configured")
 	}
-	return desktop.Launch(parts[0], parts[1:]...)
+	return desktop.Launch(parts[0], parts[1:])
 }
 
 func commandLine(cmd, path string) []string {
