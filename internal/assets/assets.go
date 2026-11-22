@@ -39,10 +39,7 @@ func load(name string, size int) image.Image {
 
 	icon.SetTarget(0, 0, float64(size), float64(size))
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	icon.Draw(
-		rasterx.NewDasher(size, size, rasterx.NewScannerGV(size, size, img, img.Bounds())),
-		1,
-	)
+	icon.Draw(rasterx.NewDasher(size, size, rasterx.NewScannerGV(size, size, img, img.Bounds())), 1)
 
 	cache[key] = img
 	return img

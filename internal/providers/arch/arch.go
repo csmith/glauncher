@@ -56,7 +56,9 @@ func (p *Provider) Search(query string) []search.Result {
 		results := p.results
 		p.mu.Unlock()
 		if len(results) == 0 {
-			return []search.Result{statusResult(fmt.Sprintf("No results found for \"%s\"", searchTerm), assets.Error(48))}
+			return []search.Result{
+				statusResult(fmt.Sprintf("No results found for \"%s\"", searchTerm), assets.Error(48)),
+			}
 		}
 		return results
 	}

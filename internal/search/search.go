@@ -87,11 +87,7 @@ func LevenshteinDistance(s, t string) int {
 			if s[i-1] == t[j-1] {
 				cost = 0
 			}
-			curr[j] = min(
-				prev[j]+1,
-				curr[j-1]+1,
-				prev[j-1]+cost,
-			)
+			curr[j] = min(prev[j]+1, curr[j-1]+1, prev[j-1]+cost)
 		}
 		prev, curr = curr, prev
 	}

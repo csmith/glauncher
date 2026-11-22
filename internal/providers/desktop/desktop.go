@@ -309,11 +309,7 @@ func iconSearchDirs() []string {
 	var dirs []string
 
 	if home, err := os.UserHomeDir(); err == nil {
-		dirs = append(
-			dirs,
-			filepath.Join(home, ".local", "share", "icons", "hicolor"),
-			filepath.Join(home, ".icons"),
-		)
+		dirs = append(dirs, filepath.Join(home, ".local", "share", "icons", "hicolor"), filepath.Join(home, ".icons"))
 	}
 
 	dirs = append(
@@ -335,10 +331,7 @@ func decodeSVG(f *os.File, size int) (image.Image, error) {
 	}
 	icon.SetTarget(0, 0, float64(size), float64(size))
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	icon.Draw(
-		rasterx.NewDasher(size, size, rasterx.NewScannerGV(size, size, img, img.Bounds())),
-		1,
-	)
+	icon.Draw(rasterx.NewDasher(size, size, rasterx.NewScannerGV(size, size, img, img.Bounds())), 1)
 	return img, nil
 }
 
@@ -352,11 +345,7 @@ func resizeIcon(img image.Image, size int) image.Image {
 	scaleY := float64(b.Dy()) / float64(size)
 	for y := range size {
 		for x := range size {
-			dst.Set(
-				x,
-				y,
-				img.At(b.Min.X+int(float64(x)*scaleX), b.Min.Y+int(float64(y)*scaleY)),
-			)
+			dst.Set(x, y, img.At(b.Min.X+int(float64(x)*scaleX), b.Min.Y+int(float64(y)*scaleY)))
 		}
 	}
 	return dst

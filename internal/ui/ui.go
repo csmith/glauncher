@@ -84,11 +84,7 @@ func New(themeCfg config.ThemeConfig, providers ...Provider) *App {
 func (a *App) Run() {
 	go func() {
 		a.window = &app.Window{}
-		a.window.Option(
-			app.Size(unit.Dp(600), unit.Dp(windowHeightDp)),
-			app.Decorated(false),
-			app.Title("glauncher"),
-		)
+		a.window.Option(app.Size(unit.Dp(600), unit.Dp(windowHeightDp)), app.Decorated(false), app.Title("glauncher"))
 
 		for _, p := range a.providers {
 			if ai, ok := p.(asyncInitializer); ok {
@@ -407,11 +403,7 @@ func (a *App) layoutResult(gtx layout.Context, index int) layout.Dimensions {
 	dims.Size.Y = height
 
 	if selected {
-		paint.FillShape(
-			gtx.Ops,
-			a.colors.selection,
-			clip.Rect{Max: dims.Size}.Op(),
-		)
+		paint.FillShape(gtx.Ops, a.colors.selection, clip.Rect{Max: dims.Size}.Op())
 	}
 
 	call.Add(gtx.Ops)
