@@ -77,14 +77,18 @@ Configurable text snippets that are copied to your clipboard.
 
 ## Getting started
 
-Currently you need to manually build and install the project:
+Build and install it from a checkout of the repository:
 
 ```
-go install chameth.com/glauncher@latest
+make install
 ```
+
+This installs the binary, with a desktop entry and icon, under
+`~/.local` (or `PREFIX`). A plain `go build` lacks the app ID the
+desktop entry is matched by, so its window gets no icon.
 
 Then configure a keyboard shortcut to launch the
-binary (probably `~/go/bin/glauncher`).
+binary (`~/.local/bin/glauncher`).
 
 - In XFCE, go to settings -> keyboard -> application shortcuts
 

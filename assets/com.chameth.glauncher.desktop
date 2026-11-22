@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=glauncher
+Comment=Search-driven application launcher
+Exec=glauncher
+Icon=com.chameth.glauncher
+StartupWMClass=com.chameth.glauncher
+Terminal=false
+NoDisplay=true
+Categories=Utility;
