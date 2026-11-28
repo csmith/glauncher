@@ -37,3 +37,4 @@ Adding a new search source means implementing `ui.Provider`, adding a config sec
 - Config uses `github.com/csmith/config` for YAML loading from XDG config dir
 - Tests use `github.com/stretchr/testify` for assertions, in `_test.go` files alongside the code they cover
 - CI is on Forgejo (not GitHub), defined in `.forgejo/workflows/`
+- `PKGBUILD` builds the Arch package from the checkout, installing what `make install` does under `/usr`; CI publishes it on pushes to master and version tags
