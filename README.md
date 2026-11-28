@@ -77,18 +77,19 @@ Configurable text snippets that are copied to your clipboard.
 
 ## Getting started
 
-Build and install it from a checkout of the repository:
+On Arch, install the `glauncher` package from the
+`packages.main.git.yak-wall.ts.net` pacman repository:
 
+```ini
+[packages.main.git.yak-wall.ts.net]
+SigLevel = Required
+Server = https://git.yak-wall.ts.net/api/packages/packages/arch/main/$arch
 ```
-make install
-```
 
-This installs the binary, with a desktop entry and icon, under
-`~/.local` (or `PREFIX`). A plain `go build` lacks the app ID the
-desktop entry is matched by, so its window gets no icon.
+The repository's signing key is at
+`https://git.yak-wall.ts.net/api/packages/packages/arch/repository.key`.
 
-Then configure a keyboard shortcut to launch the
-binary (`~/.local/bin/glauncher`).
+Then configure a keyboard shortcut to launch `glauncher`.
 
 - In XFCE, go to settings -> keyboard -> application shortcuts
 
