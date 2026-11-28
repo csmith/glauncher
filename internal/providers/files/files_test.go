@@ -10,20 +10,51 @@ import (
 )
 
 func TestParseQuery(t *testing.T) {
-	launcher := Launcher{Name: "Notes", Aliases: []string{"n"}}
+	launcher := Launcher{
+		Name:    "Notes",
+		Aliases: []string{"n"},
+	}
 
 	tests := []struct {
 		query string
 		terms []string
 		ok    bool
 	}{
-		{"notes", []string{}, true},
-		{"NOTES ", []string{}, true},
-		{"n 029", []string{"029"}, true},
-		{"n Proj  029", []string{"proj", "029"}, true},
-		{"no", nil, false},
-		{"nx 029", nil, false},
-		{"", nil, false},
+		{
+			"notes",
+			[]string{},
+			true,
+		},
+		{
+			"NOTES ",
+			[]string{},
+			true,
+		},
+		{
+			"n 029",
+			[]string{"029"},
+			true,
+		},
+		{
+			"n Proj  029",
+			[]string{"proj", "029"},
+			true,
+		},
+		{
+			"no",
+			nil,
+			false,
+		},
+		{
+			"nx 029",
+			nil,
+			false,
+		},
+		{
+			"",
+			nil,
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
@@ -114,7 +145,12 @@ func TestSearchFiltersScannedFiles(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, nil, 0o644))
 	}
 
-	p := NewProvider(Launcher{Name: "rl", Dir: dir, Patterns: []string{"*.md"}, Command: "true"})
+	p := NewProvider(Launcher{
+		Name:     "rl",
+		Dir:      dir,
+		Patterns: []string{"*.md"},
+		Command:  "true",
+	})
 	<-p.Ready()
 
 	assert.Len(t, p.Search("rl"), 3)
